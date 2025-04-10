@@ -1,0 +1,252 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+/* Add styles for the controls section */
+/* Ensure the controls section is on top */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    gap: 10px;
+    position: relative; /* Ensure it is positioned properly */
+    z-index: 10; /* Bring it to the front */
+    background-color: #f0f0f0; /* Optional: Add a background to verify visibility */
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Ensure inputs and buttons are clickable */
+.controls input,
+.controls button {
+    position: relative;
+    z-index: 10;
+}
+
+.controls label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 14px;
+}
+
+.controls input {
+    margin-top: 5px;
+    padding: 5px;
+    width: 60px;
+    text-align: center;
+}
+
+.controls button {
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #76c7c0;
+    border: none;
+    border-radius: 4px;
+    color: white;
+}
+
+.controls button:hover {
+    background-color: #5ba8a0;
+}
+
+.hex-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.hex {
+    width: 60px;
+    height: 34.64px;
+    background-color: #76c7c0;
+    margin: 17.32px 0;
+    position: relative;
+    display: inline-block;
+}
+
+.hex:before {
+    content: "";
+    display: block;
+    padding-top: 100%;
+}
+
+.hex:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.hex:hover {
+    background-color: #5ba8a0;
+}
+
+.hex-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+}
+
+/* Center the SVG in the middle of the screen */
+.hex-grid {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+}
+
+/* Default styling for hex tiles */
+.hex-tile {
+    stroke: black;
+}
+
+/* Deep ocean and ocean biomes */
+.hex-tile.abyss {
+    fill: #000033; /* Very dark blue */
+}
+
+.hex-tile.deep-ocean {
+    fill: #000066; /* Dark blue */
+}
+
+.hex-tile.ocean {
+    fill: #000099; /* Medium blue */
+}
+
+.hex-tile.coral-reef {
+    fill: #ff7f50; /* Coral color */
+}
+
+/* Coastal and beach biomes */
+.hex-tile.beach {
+    fill: #f4e4a1; /* Light sandy color */
+}
+
+.hex-tile.rocky-coast {
+    fill: #a9a9a9; /* Dark gray */
+}
+
+/* Hot and dry biomes */
+.hex-tile.desert {
+    fill: #f4a460; /* Sandy brown */
+}
+
+.hex-tile.dunes {
+    fill: #edc9af; /* Light sand color */
+}
+
+.hex-tile.mesa {
+    fill: #d2691e; /* Chocolate brown */
+}
+
+/* Grasslands and plains */
+.hex-tile.plain {
+    fill: #7cfc00; /* Lawn green */
+}
+
+.hex-tile.savanna {
+    fill: #c2b280; /* Tan */
+}
+
+.hex-tile.steppe {
+    fill: #deb887; /* Burlywood */
+}
+
+.hex-tile.prairie {
+    fill: #98fb98; /* Pale green */
+}
+
+/* Wet and tropical biomes */
+.hex-tile.rainforest {
+    fill: #228b22; /* Forest green */
+}
+
+.hex-tile.jungle {
+    fill: #006400; /* Dark green */
+}
+
+.hex-tile.mangrove {
+    fill: #556b2f; /* Dark olive green */
+}
+
+.hex-tile.swamp {
+    fill: #6b8e23; /* Olive drab */
+}
+
+.hex-tile.wetland {
+    fill: #8fbc8f; /* Dark sea green */
+}
+
+/* Forests */
+.hex-tile.forest {
+    fill: #228b22; /* Forest green */
+}
+
+.hex-tile.redwood-forest {
+    fill: #8b4513; /* Saddle brown */
+}
+
+.hex-tile.savanna-forest {
+    fill: #c2b280; /* Tan with a hint of green */
+}
+
+.hex-tile.temperate-forest {
+    fill: #32cd32; /* Lime green */
+}
+
+/* Cold and dry biomes */
+.hex-tile.taiga {
+    fill: #a9a9a9; /* Dark gray */
+}
+
+.hex-tile.tundra {
+    fill: #dcdcdc; /* Gainsboro */
+}
+
+.hex-tile.glacier {
+    fill: #e0ffff; /* Light cyan */
+}
+
+.hex-tile.iceberg {
+    fill: #b0e0e6; /* Powder blue */
+}
+
+/* Mountainous biomes */
+.hex-tile.mountain {
+    fill: #808080; /* Gray */
+}
+
+.hex-tile.alpine {
+    fill: #a9a9a9; /* Dark gray */
+}
+
+.hex-tile.rocky-mountain {
+    fill: #696969; /* Dim gray */
+}
+
+/* Volcanic biomes */
+.hex-tile.volcano {
+    fill: #ff4500; /* Orange red */
+}
+
+.hex-tile.lava-field {
+    fill: #8b0000; /* Dark red */
+}
