@@ -40,10 +40,10 @@ export function smoothMap(map: Array<Array<{ altitude: number; temperature: numb
 // Apply continental drift effects
 export function applyContinentalDrift(
     map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }>>,
-    continentCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>
+    continentCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>,
+    width: number
 ): void {
     const height = map.length;
-    const width = map[0].length;
 
     // Calculate the size of each continent
     const continentSizes = Array(continentCenters.length).fill(0);
@@ -62,11 +62,11 @@ export function applyContinentalDrift(
             const drift = continentCenters[continent].drift;
 
             // Calculate the neighboring tile in the drift direction
-            const neighborX = col + drift.dx;
+            const neighborX = (col + drift.dx + width) % width; // Wrap horizontally
             const neighborY = row + drift.dy;
 
             // Ensure the neighbor is within bounds
-            if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height) {
+            if (neighborY >= 0 && neighborY < height) {
                 const neighborTile = map[neighborY][neighborX];
 
                 // Check for convergence, divergence, or transform
@@ -79,12 +79,12 @@ export function applyContinentalDrift(
 
                     if (neighborDrift.dx === -drift.dx && neighborDrift.dy === -drift.dy) {
                         // Convergence: Lower altitude (trench)
-                        applyAltitudeEffect(map, row, col, -0.2 * continentScale, height, width);
-                        applyAltitudeEffect(map, neighborY, neighborX, -0.2 * neighborScale, height, width);
+                        applyAltitudeEffect(map, row, col, -0.2, height, width);
+                        applyAltitudeEffect(map, neighborY, neighborX, -0.2, height, width);
                     } else if (neighborDrift.dx === drift.dx && neighborDrift.dy === drift.dy) {
                         // Divergence: Higher altitude (ridge)
-                        applyAltitudeEffect(map, row, col, 0.2 * continentScale, height, width);
-                        applyAltitudeEffect(map, neighborY, neighborX, 0.2 * neighborScale, height, width);
+                        applyAltitudeEffect(map, row, col, 0.2, height, width);
+                        applyAltitudeEffect(map, neighborY, neighborX, 0.2, height, width);
                     }
                     // Transform: No altitude changes
                 }
@@ -144,10 +144,10 @@ function getNeighbors(
     ];
 
     for (const { dx, dy } of directions) {
-        const neighborX = col + dx;
+        const neighborX = (col + dx + width) % width; // Wrap horizontally
         const neighborY = row + dy;
 
-        if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height) {
+        if (neighborY >= 0 && neighborY < height) {
             neighbors.push(map[neighborY][neighborX]);
         }
     }

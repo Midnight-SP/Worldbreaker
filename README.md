@@ -21,12 +21,12 @@ To get a local copy up and running, follow these steps:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/react-hex-map.git
+   git clone https://github.com/Midnight-SP/Worldbreaker.git
    ```
 
 2. Navigate to the project directory:
    ```
-   cd react-hex-map
+   cd worldbreaker
    ```
 
 3. Install the dependencies:

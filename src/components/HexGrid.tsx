@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
 interface HexGridProps {
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }>>;
+    map: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }[][];
     visualizationType: string;
-    continents: number; // Add continents prop
+    continents: number;
 }
 
 const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents }) => {
-    const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null);
+    const [tooltip, setTooltip] = useState<string | null>(null);
 
     const hexWidth = 50; // Width of a hexagon
     const hexHeight = Math.sqrt(3) / 2 * hexWidth; // Height of a hexagon
@@ -27,7 +27,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
         return points.join(' ');
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; continent: number }): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5); // Map altitude (-1 to 1) to RGB (0 to 255)
@@ -48,15 +48,11 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
     };
 
     const handleMouseEnter = (
-        e: React.MouseEvent<SVGPolygonElement>,
         tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }
     ) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        setTooltip({
-            x: rect.x + rect.width / 2,
-            y: rect.y - hexHeight - 50,
-            content: `Biome: ${tile.terrain}\nAltitude: ${tile.altitude.toFixed(2)}\nTemperature: ${tile.temperature.toFixed(2)}\nHumidity: ${tile.humidity.toFixed(2)}\nLatitude: ${tile.latitude.toFixed(2)}\nContinent: ${tile.continent}`,
-        });
+        setTooltip(
+            `Biome: ${tile.terrain}\nAltitude: ${tile.altitude.toFixed(2)}\nTemperature: ${tile.temperature.toFixed(2)}\nHumidity: ${tile.humidity.toFixed(2)}\nLatitude: ${tile.latitude.toFixed(2)}\nContinent: ${tile.continent}`
+        );
     };
 
     const handleMouseLeave = () => {
@@ -81,7 +77,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
                                 points={getHexPoints(x, y)}
                                 className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
                                 fill={visualizationType !== 'biomes' ? getFillColor(tile) : undefined}
-                                onMouseEnter={(e) => handleMouseEnter(e, tile)}
+                                onMouseEnter={() => handleMouseEnter(tile)}
                                 onMouseLeave={handleMouseLeave}
                             />
                         );
@@ -90,19 +86,19 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
             </svg>
             {tooltip && (
                 <div
+                    className="tooltip-below"
                     style={{
-                        position: 'absolute',
-                        top: tooltip.y,
-                        left: tooltip.x,
+                        position: 'relative',
+                        marginTop: '20px',
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         color: 'white',
-                        padding: '5px',
-                        borderRadius: '4px',
-                        pointerEvents: 'none',
+                        padding: '10px',
+                        borderRadius: '5px',
                         whiteSpace: 'pre-line',
+                        textAlign: 'center',
                     }}
                 >
-                    {tooltip.content}
+                    {tooltip}
                 </div>
             )}
         </div>

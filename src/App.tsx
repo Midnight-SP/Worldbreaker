@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import HexGrid from './components/HexGrid';
-import { generateMap } from './utils/mapGenerator';
+import { generateMap } from './utils/mapGenerator'; // This will resolve to index.ts
 import './styles/App.css';
 
 const App: React.FC = () => {

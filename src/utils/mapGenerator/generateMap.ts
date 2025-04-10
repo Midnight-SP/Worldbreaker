@@ -13,12 +13,12 @@ export function generateMap(width: number, height: number, continents: number) {
     const map = Array.from({ length: height }, (_, rowIndex) =>
         Array(width).fill(null).map((_, colIndex) => {
             const tile = generateTile(rowIndex, colIndex, height);
-            const closestContinent = findClosestContinent(colIndex, rowIndex, continentCenters);
+            const closestContinent = findClosestContinent(colIndex, rowIndex, continentCenters, width); // Pass width
             return { ...tile, continent: closestContinent };
         })
     );
 
-    applyContinentalDrift(map, continentCenters);
+    applyContinentalDrift(map, continentCenters, width); // Pass width
     smoothMap(map);
 
     for (let row = 0; row < height; row++) {

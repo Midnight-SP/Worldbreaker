@@ -6,8 +6,8 @@ export const biomes = [
     { name: 'coral-reef', altitude: -0.3, temperature: 0.8, humidity: 0.9 },
 
     // Coastal and beach biomes
-    { name: 'beach', altitude: 0, temperature: 0.7, humidity: 0.6 },
-    { name: 'rocky-coast', altitude: 0, temperature: 0.6, humidity: 0.5 },
+    // { name: 'beach', altitude: 0, temperature: 0.7, humidity: 0.6 },
+    // { name: 'rocky-coast', altitude: 0, temperature: 0.6, humidity: 0.5 },
 
     // Hot and dry biomes
     { name: 'desert', altitude: 0.2, temperature: 1, humidity: 0.1 },

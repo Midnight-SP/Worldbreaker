@@ -21,12 +21,20 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
 }
 
 // Find the closest continent center to a tile
-export function findClosestContinent(x: number, y: number, centers: Array<{ x: number; y: number }>): number {
+export function findClosestContinent(
+    x: number,
+    y: number,
+    centers: Array<{ x: number; y: number }>,
+    width: number
+): number {
     let minDistance = Infinity;
     let closestContinents: number[] = [];
 
     centers.forEach((center, index) => {
-        const distance = Math.sqrt(Math.pow(center.x - x, 2) + Math.pow(center.y - y, 2));
+        const dx = Math.min(Math.abs(center.x - x), width - Math.abs(center.x - x)); // Wrap horizontally
+        const dy = Math.abs(center.y - y);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
         if (distance < minDistance) {
             minDistance = distance;
             closestContinents = [index];
