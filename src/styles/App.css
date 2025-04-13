@@ -78,6 +78,12 @@ body {
     align-items: center;
     overflow: hidden; /* Prevent scrollbars */
     height: calc(100vh - 150px); /* Ensure it fills the remaining screen height */
+    cursor: grab; /* Show grab cursor */
+    transition: transform 0.1s ease; /* Smooth dragging and zooming */
+}
+
+.map-wrapper:active {
+    cursor: grabbing; /* Show grabbing cursor when dragging */
 }
 
 .hex-grid {

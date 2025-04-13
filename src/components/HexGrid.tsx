@@ -16,8 +16,8 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
     const hexHeight = Math.sqrt(3) / 2 * hexWidth; // Height of a hexagon
 
     // Calculate the total width and height of the map
-    const mapWidth = map[0].length * hexWidth * 0.75; // Horizontal space
-    const mapHeight = map.length * hexHeight + hexHeight / 2; // Vertical space
+    const mapWidth = map[0].length * hexWidth * 0.75 + hexWidth / 4; // Add padding for the last column
+    const mapHeight = map.length * hexHeight + hexHeight / 2; // Add padding for the last row
 
     const getHexPoints = (x: number, y: number): string => {
         const points = [];
@@ -49,8 +49,13 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
         }
     };
 
-    const handleMouseEnter = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; plate: number }) => {
-        const tooltipContent = `Biome: ${tile.terrain}\nAltitude: ${tile.altitude.toFixed(2)}\nTemperature: ${tile.temperature.toFixed(2)}\nHumidity: ${tile.humidity.toFixed(2)}\nPlate: ${tile.plate}`;
+    const handleMouseEnter = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }) => {
+        const tooltipContent = `Biome: ${tile.terrain}
+    Altitude: ${tile.altitude.toFixed(2)}
+    Temperature: ${tile.temperature.toFixed(2)}
+    Humidity: ${tile.humidity.toFixed(2)}
+    Latitude: ${tile.latitude.toFixed(2)}
+    Plate: ${tile.plate}`;
         setTooltip(tooltipContent); // Update tooltip in App
     };
 
