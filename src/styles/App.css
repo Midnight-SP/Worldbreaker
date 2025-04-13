@@ -159,26 +159,41 @@ body {
     fill: #000066; /* Dark blue */
 }
 
+.hex-tile.deep-cold-ocean {
+    fill: #003366; /* Cold dark blue */
+}
+
+.hex-tile.deep-warm-ocean {
+    fill: #336699; /* Warm dark blue */
+}
+
 .hex-tile.ocean {
     fill: #000099; /* Medium blue */
+}
+
+.hex-tile.cold-ocean {
+    fill: #003399; /* Cold medium blue */
+}
+
+.hex-tile.warm-ocean {
+    fill: #3399cc; /* Warm medium blue */
 }
 
 .hex-tile.coral-reef {
     fill: #ff7f50; /* Coral color */
 }
 
-/* Coastal and beach biomes */
-.hex-tile.beach {
-    fill: #f4e4a1; /* Light sandy color */
-}
-
-.hex-tile.rocky-coast {
-    fill: #a9a9a9; /* Dark gray */
-}
-
 /* Hot and dry biomes */
 .hex-tile.desert {
     fill: #f4a460; /* Sandy brown */
+}
+
+.hex-tile.lush-desert {
+    fill: #f5deb3; /* Wheat color */
+}
+
+.hex-tile.arid-desert {
+    fill: #d2b48c; /* Tan */
 }
 
 .hex-tile.dunes {
@@ -187,6 +202,10 @@ body {
 
 .hex-tile.mesa {
     fill: #d2691e; /* Chocolate brown */
+}
+
+.hex-tile.badlands {
+    fill: #a0522d; /* Saddle brown */
 }
 
 /* Grasslands and plains */
@@ -227,6 +246,14 @@ body {
     fill: #8fbc8f; /* Dark sea green */
 }
 
+.hex-tile.marsh {
+    fill: #2e8b57; /* Sea green */
+}
+
+.hex-tile.bog {
+    fill: #3cb371; /* Medium sea green */
+}
+
 /* Forests */
 .hex-tile.forest {
     fill: #228b22; /* Forest green */
@@ -244,6 +271,14 @@ body {
     fill: #32cd32; /* Lime green */
 }
 
+.hex-tile.boreal-forest {
+    fill: #2e8b57; /* Sea green */
+}
+
+.hex-tile.deciduous-forest {
+    fill: #3cb371; /* Medium sea green */
+}
+
 /* Cold and dry biomes */
 .hex-tile.taiga {
     fill: #a9a9a9; /* Dark gray */
@@ -259,6 +294,10 @@ body {
 
 .hex-tile.iceberg {
     fill: #b0e0e6; /* Powder blue */
+}
+
+.hex-tile.permafrost {
+    fill: #add8e6; /* Light blue */
 }
 
 /* Mountainous biomes */
@@ -281,4 +320,8 @@ body {
 
 .hex-tile.lava-field {
     fill: #8b0000; /* Dark red */
+}
+
+.hex-tile.wasteland {
+    fill: #a0522d; /* Saddle brown */
 }

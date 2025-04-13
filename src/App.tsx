@@ -4,7 +4,8 @@ import { generateMap } from './utils/mapGenerator';
 import './styles/App.css';
 
 const App: React.FC = () => {
-    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }>> | null>(null);
+    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }>> | null>(null);
+    const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number] }>>([]); // State for river paths
     const [width, setWidth] = useState<number>(100); // Default width
     const [height, setHeight] = useState<number>(50); // Default height
     const [plates, setPlates] = useState<number>(5); // Default number of tectonic plates
@@ -16,8 +17,9 @@ const App: React.FC = () => {
     const mapWrapperRef = useRef<HTMLDivElement>(null); // Reference to the map-wrapper element
 
     useEffect(() => {
-        const newMap = generateMap(width, height, plates);
+        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
         setMap(newMap);
+        setRiverPaths(newRiverPaths); // Set river paths
     }, [width, height, plates]);
 
     useEffect(() => {
@@ -41,8 +43,9 @@ const App: React.FC = () => {
     }, []);
 
     const handleGenerateMap = () => {
-        const newMap = generateMap(width, height, plates);
+        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
         setMap(newMap);
+        setRiverPaths(newRiverPaths); // Set river paths
     };
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -92,7 +95,7 @@ const App: React.FC = () => {
                         <input
                             type="number"
                             value={width}
-                            onChange={(e) => handleWidthChange(parseInt(e.target.value) || 1)}
+                            onChange={(e) => setWidth(parseInt(e.target.value) || 1)}
                             min="10"
                         />
                     </label>
@@ -101,7 +104,7 @@ const App: React.FC = () => {
                         <input
                             type="number"
                             value={height}
-                            onChange={(e) => handleHeightChange(parseInt(e.target.value) || 1)}
+                            onChange={(e) => setHeight(parseInt(e.target.value) || 1)}
                             min="5"
                         />
                     </label>
@@ -125,6 +128,7 @@ const App: React.FC = () => {
                             <option value="altitude">Altitude</option>
                             <option value="temperature">Temperature</option>
                             <option value="humidity">Humidity</option>
+                            <option value="vegetation">Vegetation</option>
                             <option value="plates">Tectonic Plates</option>
                         </select>
                     </label>
@@ -133,7 +137,6 @@ const App: React.FC = () => {
             <div
                 className="map-wrapper"
                 ref={mapWrapperRef} // Attach the ref to the map-wrapper
-                onMouseDown={handleMouseDown}
                 style={{
                     transform: `translate(${mapPosition.x}px, ${mapPosition.y}px) scale(${zoom})`,
                     transformOrigin: 'center',
@@ -142,6 +145,7 @@ const App: React.FC = () => {
                 {map && (
                     <HexGrid
                         map={map}
+                        riverPaths={riverPaths} // Pass river paths to HexGrid
                         visualizationType={visualizationType}
                         plates={plates}
                         setTooltip={setTooltip} // Pass setTooltip to HexGrid

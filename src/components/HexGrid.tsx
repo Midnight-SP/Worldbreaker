@@ -1,91 +1,96 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface HexGridProps {
-    map: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }[][];
+    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }[][];
+    riverPaths: Array<{ start: [number, number]; end: [number, number] }>;
     visualizationType: string;
     plates: number;
-    setTooltip: React.Dispatch<React.SetStateAction<string | null>>; // Add setTooltip prop
+    setTooltip: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTooltip }) => {
+const HexGrid: React.FC<HexGridProps> = ({ map, riverPaths, visualizationType, plates, setTooltip }) => {
     if (!map || map.length === 0) {
-        return <div>No map data available</div>; // Fallback if map is empty
+        return <div>No map data available</div>;
     }
 
-    const hexWidth = 50; // Width of a hexagon
-    const hexHeight = Math.sqrt(3) / 2 * hexWidth; // Height of a hexagon
+    const hexWidth = 50;
+    const hexHeight = Math.sqrt(3) / 2 * hexWidth;
 
-    // Calculate the total width and height of the map
-    const mapWidth = map[0].length * hexWidth * 0.75 + hexWidth / 4; // Add padding for the last column
-    const mapHeight = map.length * hexHeight + hexHeight / 2; // Add padding for the last row
-
-    const getHexPoints = (x: number, y: number): string => {
-        const points = [];
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i;
-            const px = x + hexWidth / 2 * Math.cos(angle);
-            const py = y + hexWidth / 2 * Math.sin(angle);
-            points.push(`${px},${py}`);
-        }
-        return points.join(' ');
+    const getHexCenter = (row: number, col: number): [number, number] => {
+        const x = col * (hexWidth * 0.75);
+        const y = row * hexHeight + (col % 2 === 0 ? 0 : hexHeight / 2);
+        return [x, y];
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }): string => {
         switch (visualizationType) {
             case 'altitude':
-                const altitudeColor = Math.floor((tile.altitude + 1) * 127.5); // Map altitude (-1 to 1) to RGB (0 to 255)
+                const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);
                 return `rgb(${altitudeColor}, ${altitudeColor}, ${altitudeColor})`;
             case 'temperature':
-                const temperatureColor = Math.floor((tile.temperature + 1) * 127.5); // Map temperature (-1 to 1) to RGB (0 to 255)
+                const temperatureColor = Math.floor((tile.temperature + 1) * 127.5);
                 return `rgb(${temperatureColor}, 0, ${255 - temperatureColor})`;
             case 'humidity':
-                const humidityColor = Math.floor(tile.humidity * 255); // Map humidity (0 to 1) to RGB (0 to 255)
+                const humidityColor = Math.floor(tile.humidity * 255);
                 return `rgb(0, ${humidityColor}, ${255 - humidityColor})`;
+            case 'vegetation':
+                const vegetationColor = Math.floor(tile.vegetation * 255);
+                return `rgb(${vegetationColor}, ${255 - vegetationColor}, 0)`;
             case 'plates':
-                return `hsl(${tile.plate * (360 / plates)}, 70%, 50%)`; // Assign color based on plate
+                return `hsl(${tile.plate * (360 / plates)}, 70%, 50%)`;
             case 'biomes':
             default:
-                return ''; // Use CSS classes for biomes
+                return '';
         }
-    };
-
-    const handleMouseEnter = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }) => {
-        const tooltipContent = `Biome: ${tile.terrain}
-    Altitude: ${tile.altitude.toFixed(2)}
-    Temperature: ${tile.temperature.toFixed(2)}
-    Humidity: ${tile.humidity.toFixed(2)}
-    Latitude: ${tile.latitude.toFixed(2)}
-    Plate: ${tile.plate}`;
-        setTooltip(tooltipContent); // Update tooltip in App
-    };
-
-    const handleMouseLeave = () => {
-        setTooltip(null); // Clear tooltip in App
     };
 
     return (
         <div className="hex-grid">
             <svg
-                viewBox={`-${hexWidth / 2} -${hexHeight / 2} ${mapWidth + hexWidth} ${mapHeight + hexHeight}`}
+                viewBox={`-${hexWidth / 2} -${hexHeight / 2} ${map[0].length * hexWidth * 0.75 + hexWidth} ${map.length * hexHeight + hexHeight}`}
             >
+                {/* Draw hexagons */}
                 {map.map((row, rowIndex) =>
                     row.map((tile, colIndex) => {
-                        // Calculate the position of each hexagon
-                        const x = colIndex * (hexWidth * 0.75); // Horizontal offset
-                        const y = rowIndex * hexHeight + (colIndex % 2 === 0 ? 0 : hexHeight / 2); // Vertical offset
+                        const [x, y] = getHexCenter(rowIndex, colIndex);
 
                         return (
                             <polygon
                                 key={`${rowIndex}-${colIndex}`}
-                                points={getHexPoints(x, y)}
+                                points={`
+                                    ${x + hexWidth / 2},${y}
+                                    ${x + hexWidth / 4},${y + hexHeight / 2}
+                                    ${x - hexWidth / 4},${y + hexHeight / 2}
+                                    ${x - hexWidth / 2},${y}
+                                    ${x - hexWidth / 4},${y - hexHeight / 2}
+                                    ${x + hexWidth / 4},${y - hexHeight / 2}
+                                `}
                                 className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
                                 fill={visualizationType !== 'biomes' ? getFillColor(tile) : undefined}
-                                onMouseEnter={() => handleMouseEnter(tile)}
-                                onMouseLeave={handleMouseLeave}
+                                onMouseEnter={() => setTooltip(`Altitude: ${tile.altitude.toFixed(2)}`)}
+                                onMouseLeave={() => setTooltip(null)}
                             />
                         );
                     })
                 )}
+
+                {/* Draw rivers */}
+                {riverPaths.map(({ start, end }, index) => {
+                    const [startX, startY] = getHexCenter(start[0], start[1]);
+                    const [endX, endY] = getHexCenter(end[0], end[1]);
+
+                    return (
+                        <line
+                            key={index}
+                            x1={startX}
+                            y1={startY}
+                            x2={endX}
+                            y2={endY}
+                            stroke="blue"
+                            strokeWidth="2"
+                        />
+                    );
+                })}
             </svg>
         </div>
     );

@@ -1,7 +1,7 @@
 import { determineTerrain } from './terrain';
 
 // Generate a single tile
-export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number } {
+export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; hasRiver: boolean } {
     const altitude = Math.random() * 1.6 - 0.85; // Base altitude between -0.2 and 0.2
 
     // Adjust latitude based on row and column
@@ -11,13 +11,16 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
 
     // Adjust temperature based on latitude
     const absLatitude = Math.abs(latitude);
-    const temperature = Math.min(Math.exp(-Math.pow(absLatitude - 0.25, 2) / 0.05) * Math.random() * 0.8 + (1 - absLatitude) * Math.random() * 0.5 + Math.random() * 0.05, 1); // Peak at 0.2 latitude
+    const temperature = Math.min(Math.exp(-Math.pow(absLatitude - 0.4, 2) / 0.05) * Math.random() * 0.8 + (1 - absLatitude) * Math.random() * 0.5 + Math.random() * 0.05, 1); // Peak at 0.2 latitude
 
     // Adjust humidity based on latitude
     const humidity = Math.min((1 - absLatitude) * Math.random() * 0.9 + Math.random() * 0.3, 1);
 
+     //Adjust vegetation based on altitude
+     const vegetation = Math.min((1 - altitude) * Math.random() * 0.9 + Math.random() * 0.3, 1); // Vegetation from 0 to 1 based on altitude
+
     const terrain = determineTerrain(altitude, temperature, humidity);
-    return { altitude, temperature, humidity, terrain, latitude };
+    return { altitude, temperature, humidity, vegetation, terrain, latitude, hasRiver: false };
 }
 
 // Find the closest plate center to a tile
