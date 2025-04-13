@@ -1,10 +1,10 @@
 import { driftDirections } from './driftDirections';
 import { determineTerrain } from './terrain';
 import { applyContinentalDrift, smoothMap } from './smoothing';
-import { generateTile, findClosestContinent } from './tileGeneration';
+import { generateTile, findClosestPlate } from './tileGeneration';
 
-export function generateMap(width: number, height: number, continents: number) {
-    const continentCenters = Array.from({ length: continents }, () => ({
+export function generateMap(width: number, height: number, plates: number) {
+    const plateCenters = Array.from({ length: plates }, () => ({
         x: Math.floor(Math.random() * width),
         y: Math.floor(Math.random() * height),
         drift: driftDirections[Math.floor(Math.random() * driftDirections.length)],
@@ -13,12 +13,12 @@ export function generateMap(width: number, height: number, continents: number) {
     const map = Array.from({ length: height }, (_, rowIndex) =>
         Array(width).fill(null).map((_, colIndex) => {
             const tile = generateTile(rowIndex, colIndex, height);
-            const closestContinent = findClosestContinent(colIndex, rowIndex, continentCenters, width); // Pass width
-            return { ...tile, continent: closestContinent };
+            const closestPlate = findClosestPlate(colIndex, rowIndex, plateCenters, width); // Updated function name
+            return { ...tile, plate: closestPlate };
         })
     );
 
-    applyContinentalDrift(map, continentCenters, width); // Pass width
+    applyContinentalDrift(map, plateCenters, width); // Updated parameter name
     smoothMap(map);
 
     for (let row = 0; row < height; row++) {

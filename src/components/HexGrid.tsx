@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 
 interface HexGridProps {
-    map: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }[][];
+    map: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }[][];
     visualizationType: string;
-    continents: number;
+    plates: number;
+    setTooltip: React.Dispatch<React.SetStateAction<string | null>>; // Add setTooltip prop
 }
 
-const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents }) => {
-    const [tooltip, setTooltip] = useState<string | null>(null);
+const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTooltip }) => {
+    if (!map || map.length === 0) {
+        return <div>No map data available</div>; // Fallback if map is empty
+    }
 
     const hexWidth = 50; // Width of a hexagon
     const hexHeight = Math.sqrt(3) / 2 * hexWidth; // Height of a hexagon
@@ -27,7 +30,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
         return points.join(' ');
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5); // Map altitude (-1 to 1) to RGB (0 to 255)
@@ -38,31 +41,26 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
             case 'humidity':
                 const humidityColor = Math.floor(tile.humidity * 255); // Map humidity (0 to 1) to RGB (0 to 255)
                 return `rgb(0, ${humidityColor}, ${255 - humidityColor})`;
-            case 'continents':
-                const randomColor = `hsl(${tile.continent * (360 / continents)}, 70%, 50%)`; // Assign random color based on continent
-                return randomColor;
+            case 'plates':
+                return `hsl(${tile.plate * (360 / plates)}, 70%, 50%)`; // Assign color based on plate
             case 'biomes':
             default:
                 return ''; // Use CSS classes for biomes
         }
     };
 
-    const handleMouseEnter = (
-        tile: { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }
-    ) => {
-        setTooltip(
-            `Biome: ${tile.terrain}\nAltitude: ${tile.altitude.toFixed(2)}\nTemperature: ${tile.temperature.toFixed(2)}\nHumidity: ${tile.humidity.toFixed(2)}\nLatitude: ${tile.latitude.toFixed(2)}\nContinent: ${tile.continent}`
-        );
+    const handleMouseEnter = (tile: { altitude: number; temperature: number; humidity: number; terrain: string; plate: number }) => {
+        const tooltipContent = `Biome: ${tile.terrain}\nAltitude: ${tile.altitude.toFixed(2)}\nTemperature: ${tile.temperature.toFixed(2)}\nHumidity: ${tile.humidity.toFixed(2)}\nPlate: ${tile.plate}`;
+        setTooltip(tooltipContent); // Update tooltip in App
     };
 
     const handleMouseLeave = () => {
-        setTooltip(null);
+        setTooltip(null); // Clear tooltip in App
     };
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div className="hex-grid">
             <svg
-                className="hex-grid"
                 viewBox={`-${hexWidth / 2} -${hexHeight / 2} ${mapWidth + hexWidth} ${mapHeight + hexHeight}`}
             >
                 {map.map((row, rowIndex) =>
@@ -84,23 +82,6 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, continents })
                     })
                 )}
             </svg>
-            {tooltip && (
-                <div
-                    className="tooltip-below"
-                    style={{
-                        position: 'relative',
-                        marginTop: '20px',
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        color: 'white',
-                        padding: '10px',
-                        borderRadius: '5px',
-                        whiteSpace: 'pre-line',
-                        textAlign: 'center',
-                    }}
-                >
-                    {tooltip}
-                </div>
-            )}
         </div>
     );
 };

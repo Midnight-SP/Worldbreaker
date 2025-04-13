@@ -2,7 +2,7 @@ import { determineTerrain } from './terrain';
 
 // Generate a single tile
 export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { altitude: number; temperature: number; humidity: number; terrain: string; latitude: number } {
-    const altitude = Math.random() * 1.6 - 0.75; // Base altitude between -0.2 and 0.2
+    const altitude = Math.random() * 1.6 - 0.85; // Base altitude between -0.2 and 0.2
 
     // Adjust latitude based on row and column
     const baseLatitude = 1 - (rowIndex / (totalRows - 0.5)) * 2; // Latitude from 1 (top) to -1 (bottom)
@@ -20,15 +20,15 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
     return { altitude, temperature, humidity, terrain, latitude };
 }
 
-// Find the closest continent center to a tile
-export function findClosestContinent(
+// Find the closest plate center to a tile
+export function findClosestPlate(
     x: number,
     y: number,
     centers: Array<{ x: number; y: number }>,
     width: number
 ): number {
     let minDistance = Infinity;
-    let closestContinents: number[] = [];
+    let closestPlates: number[] = [];
 
     centers.forEach((center, index) => {
         const dx = Math.min(Math.abs(center.x - x), width - Math.abs(center.x - x)); // Wrap horizontally
@@ -37,12 +37,11 @@ export function findClosestContinent(
 
         if (distance < minDistance) {
             minDistance = distance;
-            closestContinents = [index];
+            closestPlates = [index];
         } else if (distance === minDistance) {
-            closestContinents.push(index);
+            closestPlates.push(index);
         }
     });
 
-    // If multiple continents are equidistant, choose one randomly
-    return closestContinents[Math.floor(Math.random() * closestContinents.length)];
+    return closestPlates[Math.floor(Math.random() * closestPlates.length)];
 }

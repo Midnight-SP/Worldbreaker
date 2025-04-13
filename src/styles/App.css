@@ -8,11 +8,22 @@ body {
 }
 
 /* Header styling */
-h1 {
+.header {
+    position: fixed; /* Fix the header at the top */
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #2a2a3b; /* Slightly lighter background */
+    z-index: 1000; /* Ensure it stays above other elements */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    padding: 10px 0;
+}
+
+.header h1 {
     text-align: center;
     color: #76c7c0;
-    font-size: 2.5rem;
-    margin: 20px 0;
+    font-size: 2rem;
+    margin: 0;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -21,13 +32,8 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px auto;
     gap: 15px;
-    background-color: #2a2a3b; /* Slightly lighter background */
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    max-width: 800px;
+    padding: 10px;
 }
 
 .controls label {
@@ -38,11 +44,10 @@ h1 {
     color: #f0f0f0;
 }
 
-.controls input {
+.controls input,
+.controls select {
     margin-top: 5px;
     padding: 8px;
-    width: 70px;
-    text-align: center;
     border: 1px solid #76c7c0;
     border-radius: 5px;
     background-color: #1e1e2f;
@@ -65,16 +70,16 @@ h1 {
     background-color: #5ba8a0;
 }
 
-/* Dropdown styling */
-.controls select {
-    padding: 8px;
-    border: 1px solid #76c7c0;
-    border-radius: 5px;
-    background-color: #1e1e2f;
-    color: #f0f0f0;
+/* Map wrapper */
+.map-wrapper {
+    margin-top: 150px; /* Ensure space for the fixed header */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Prevent scrollbars */
+    height: calc(100vh - 150px); /* Ensure it fills the remaining screen height */
 }
 
-/* Hex grid container */
 .hex-grid {
     display: block;
     margin: 20px auto;
@@ -88,16 +93,23 @@ h1 {
 }
 
 /* Tooltip styling */
+.tooltip-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 1000;
+}
+
 .tooltip {
-    position: absolute;
     background-color: rgba(0, 0, 0, 0.8);
     color: #f0f0f0;
     padding: 10px;
     border-radius: 5px;
     font-size: 0.9rem;
     white-space: pre-line;
-    pointer-events: none;
-    z-index: 1000;
+    text-align: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 

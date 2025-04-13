@@ -39,18 +39,18 @@ export function smoothMap(map: Array<Array<{ altitude: number; temperature: numb
 
 // Apply continental drift effects
 export function applyContinentalDrift(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; continent: number }>>,
-    continentCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>,
+    map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }>>,
+    plateCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>,
     width: number
 ): void {
     const height = map.length;
 
     // Calculate the size of each continent
-    const continentSizes = Array(continentCenters.length).fill(0);
+    const continentSizes = Array(plateCenters.length).fill(0);
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
-            continentSizes[tile.continent]++;
+            continentSizes[tile.plate]++;
         }
     }
 
@@ -58,8 +58,8 @@ export function applyContinentalDrift(
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
-            const continent = tile.continent;
-            const drift = continentCenters[continent].drift;
+            const continent = tile.plate;
+            const drift = plateCenters[continent].drift;
 
             // Calculate the neighboring tile in the drift direction
             const neighborX = (col + drift.dx + width) % width; // Wrap horizontally
@@ -70,12 +70,12 @@ export function applyContinentalDrift(
                 const neighborTile = map[neighborY][neighborX];
 
                 // Check for convergence, divergence, or transform
-                if (neighborTile.continent !== continent) {
-                    const neighborDrift = continentCenters[neighborTile.continent].drift;
+                if (neighborTile.plate !== continent) {
+                    const neighborDrift = plateCenters[neighborTile.plate].drift;
 
                     // Scale altitude changes based on continent size
                     const continentScale = Math.log10(continentSizes[continent] + 1); // Logarithmic scaling
-                    const neighborScale = Math.log10(continentSizes[neighborTile.continent] + 1);
+                    const neighborScale = Math.log10(continentSizes[neighborTile.plate] + 1);
 
                     if (neighborDrift.dx === -drift.dx && neighborDrift.dy === -drift.dy) {
                         // Convergence: Lower altitude (trench)
