@@ -1,5 +1,4 @@
-export const biomes = [
-    // Deep ocean and ocean biomes
+export const oceanBiomes = [
     { name: 'abyss', altitude: -1, temperature: 0.3, humidity: 0.9, vegetation: 0 },
     { name: 'deep-ocean', altitude: -0.8, temperature: 0.4, humidity: 0.8, vegetation: 0.1 },
     { name: 'deep-cold-ocean', altitude: -0.7, temperature: 0.2, humidity: 0.7, vegetation: 0.15 },
@@ -8,7 +7,10 @@ export const biomes = [
     { name: 'cold-ocean', altitude: -0.6, temperature: 0.2, humidity: 0.7, vegetation: 0.2 },
     { name: 'warm-ocean', altitude: -0.4, temperature: 0.6, humidity: 0.8, vegetation: 0.4 },
     { name: 'coral-reef', altitude: -0.3, temperature: 0.8, humidity: 0.9, vegetation: 0.5 },
+    { name: 'iceberg', altitude: -0.2, temperature: 0, humidity: 0.9, vegetation: 0 },
+];
 
+export const landBiomes = [
     // Hot and dry biomes
     { name: 'desert', altitude: 0.2, temperature: 1, humidity: 0.1, vegetation: 0.2 },
     { name: 'lush-desert', altitude: 0.3, temperature: 0.9, humidity: 0.2, vegetation: 0.3 },
@@ -26,8 +28,8 @@ export const biomes = [
     // Wet and tropical biomes
     { name: 'rainforest', altitude: 0.3, temperature: 0.9, humidity: 1, vegetation: 0.9 },
     { name: 'jungle', altitude: 0.4, temperature: 0.9, humidity: 0.9, vegetation: 0.8 },
-    { name: 'mangrove', altitude: 0.1, temperature: 0.7, humidity: 1, vegetation: 0.9 },
-    { name: 'swamp', altitude: 0.2, temperature: 0.5, humidity: 0.9, vegetation: 0.8 },
+    { name: 'mangrove', altitude: 0, temperature: 0.7, humidity: 1, vegetation: 0.9 },
+    { name: 'swamp', altitude: 0.1, temperature: 0.5, humidity: 0.9, vegetation: 0.8 },
     { name: 'wetland', altitude: 0.2, temperature: 0.4, humidity: 0.8, vegetation: 0.7 },
     { name: 'marsh', altitude: 0.2, temperature: 0.4, humidity: 0.9, vegetation: 0.8 },
     { name: 'bog', altitude: 0.2, temperature: 0.4, humidity: 0.9, vegetation: 0.7 },
@@ -44,7 +46,6 @@ export const biomes = [
     { name: 'taiga', altitude: 0.4, temperature: 0.2, humidity: 0.5, vegetation: 0.5 },
     { name: 'tundra', altitude: 0.6, temperature: 0.1, humidity: 0.3, vegetation: 0.3 },
     { name: 'glacier', altitude: 1, temperature: 0, humidity: 0.2, vegetation: 0 },
-    { name: 'iceberg', altitude: -0.6, temperature: 0, humidity: 0.3, vegetation: 0 },
     { name: 'permafrost', altitude: 0.6, temperature: 0, humidity: 0.4, vegetation: 0.2 },
 
     // Mountainous biomes
@@ -56,4 +57,7 @@ export const biomes = [
     { name: 'volcano', altitude: 1, temperature: 1, humidity: 0.2, vegetation: 0 },
     { name: 'lava-field', altitude: 0.7, temperature: 1, humidity: 0.1, vegetation: 0 },
     { name: 'wasteland', altitude: 0.6, temperature: 0.8, humidity: 0.2, vegetation: 0.1 },
+
+    // Lake biome
+    { name: 'lake', altitude: 0, temperature: 0.5, humidity: 1, vegetation: 0.8 },
 ];

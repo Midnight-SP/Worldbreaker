@@ -22,7 +22,7 @@ export function generateMap(width: number, height: number, plates: number) {
 
     applyContinentalDrift(map, plateCenters, width);
     smoothMap(map);
-    const riverPaths = generateRivers(map, Math.floor((width * height) / 100)); // Generate rivers
+    const riverPaths = generateRivers(map, Math.floor((width * height) / 150)); // Generate rivers
     applyRainShadowEffect(map);
 
     for (let row = 0; row < height; row++) {

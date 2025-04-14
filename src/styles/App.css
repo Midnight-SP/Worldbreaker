@@ -325,3 +325,7 @@ body {
 .hex-tile.wasteland {
     fill: #a0522d; /* Saddle brown */
 }
+
+.hex-tile.lake {
+    fill: #4682b4; /* Steel blue */
+}

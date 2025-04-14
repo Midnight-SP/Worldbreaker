@@ -2,7 +2,7 @@ import { determineTerrain } from './terrain';
 
 // Generate a single tile
 export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; hasRiver: boolean } {
-    const altitude = Math.random() * 1.6 - 0.85; // Base altitude between -0.2 and 0.2
+    const altitude = Math.random() * 1.6 - 0.75; // Base altitude between -0.2 and 0.2
 
     // Adjust latitude based on row and column
     const baseLatitude = 1 - (rowIndex / (totalRows - 0.5)) * 2; // Latitude from 1 (top) to -1 (bottom)
@@ -11,7 +11,10 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
 
     // Adjust temperature based on latitude
     const absLatitude = Math.abs(latitude);
-    const temperature = Math.min(Math.exp(-Math.pow(absLatitude - 0.4, 2) / 0.05) * Math.random() * 0.8 + (1 - absLatitude) * Math.random() * 0.5 + Math.random() * 0.05, 1); // Peak at 0.2 latitude
+    const temperature = Math.min(
+        0.9 * Math.exp(-Math.pow(absLatitude - 0.3, 2) / 0.1) + 0.2 * Math.random() - 0.1 * Math.random(),
+        1
+    ); // Peak near tropics (0.9), lower near poles (0) and equator (0.5)
 
     // Adjust humidity based on latitude
     const humidity = Math.min((1 - absLatitude) * Math.random() * 0.9 + Math.random() * 0.3, 1);

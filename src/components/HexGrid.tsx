@@ -2,7 +2,7 @@ import React from 'react';
 
 interface HexGridProps {
     map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }[][];
-    riverPaths: Array<{ start: [number, number]; end: [number, number] }>;
+    riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number }>;
     visualizationType: string;
     plates: number;
     setTooltip: React.Dispatch<React.SetStateAction<string | null>>;
@@ -67,7 +67,21 @@ const HexGrid: React.FC<HexGridProps> = ({ map, riverPaths, visualizationType, p
                                 `}
                                 className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
                                 fill={visualizationType !== 'biomes' ? getFillColor(tile) : undefined}
-                                onMouseEnter={() => setTooltip(`Altitude: ${tile.altitude.toFixed(2)}`)}
+                                onMouseEnter={() =>
+                                    setTooltip(
+                                        'Coordinates: ' +
+                                        `(${colIndex}, ${rowIndex})\n` +
+                                        `Altitude: ${tile.altitude.toFixed(2)}\n` +
+                                        `Temperature: ${tile.temperature.toFixed(2)}\n` +
+                                        `Humidity: ${tile.humidity.toFixed(2)}\n` +
+                                        `Vegetation: ${tile.vegetation.toFixed(2)}\n` +
+                                        `Latitude: ${tile.latitude.toFixed(2)}\n` +
+                                        `Terrain: ${tile.terrain}` +
+                                        (tile.hasRiver ? '\nHas River' : '') +
+                                        (visualizationType === 'plates' ? `\nPlate: ${tile.plate}` : '')
+
+                                    )
+                                }
                                 onMouseLeave={() => setTooltip(null)}
                             />
                         );
@@ -75,22 +89,23 @@ const HexGrid: React.FC<HexGridProps> = ({ map, riverPaths, visualizationType, p
                 )}
 
                 {/* Draw rivers */}
-                {riverPaths.map(({ start, end }, index) => {
-                    const [startX, startY] = getHexCenter(start[0], start[1]);
-                    const [endX, endY] = getHexCenter(end[0], end[1]);
+                    {riverPaths.map(({ start, end, width }, index) => {
+                        const [startX, startY] = getHexCenter(start[0], start[1]);
+                        const [endX, endY] = getHexCenter(end[0], end[1]);
 
-                    return (
-                        <line
-                            key={index}
-                            x1={startX}
-                            y1={startY}
-                            x2={endX}
-                            y2={endY}
-                            stroke="blue"
-                            strokeWidth="2"
-                        />
-                    );
-                })}
+                        return (
+                            <line
+                                key={index}
+                                x1={startX}
+                                y1={startY}
+                                x2={endX}
+                                y2={endY}
+                                stroke="blue"
+                                strokeWidth={width} // Use the river width
+                                strokeLinecap="round" // Smooth line ends
+                            />
+                        );
+                    })}
             </svg>
         </div>
     );

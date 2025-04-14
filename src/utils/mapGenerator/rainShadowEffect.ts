@@ -25,13 +25,13 @@ export function applyRainShadowEffect(
 
 // Determine wind direction based on latitude
 function getWindDirection(latitude: number): { dx: number; dy: number } {
-    if (latitude > 0.4) {
+    if (latitude > 0.3) {
         // Northern tropics: Winds blow southward
         return { dx: 0, dy: -1 };
     } else if (latitude > 0) {
         // Northern hemisphere: Winds blow northward
         return { dx: 0, dy: 1 };
-    } else if (latitude > -0.4) {
+    } else if (latitude > -0.3) {
         // Southern hemisphere: Winds blow southward
         return { dx: 0, dy: -1 };
     } else {

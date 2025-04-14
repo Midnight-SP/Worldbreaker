@@ -1,7 +1,9 @@
-import { biomes } from './biomes';
+import { landBiomes, oceanBiomes } from './biomes';
 
 // Determine the closest biome based on parameters
 export function determineTerrain(altitude: number, temperature: number, humidity: number): string {
+    const biomes = altitude >= 0 ? landBiomes : oceanBiomes; // Use land or ocean biomes based on altitude
+
     let closestBiome = biomes[0];
     let smallestDistance = calculateDistance(altitude, temperature, humidity, closestBiome);
 

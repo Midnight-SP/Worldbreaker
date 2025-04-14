@@ -5,21 +5,22 @@ import './styles/App.css';
 
 const App: React.FC = () => {
     const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }>> | null>(null);
-    const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number] }>>([]); // State for river paths
-    const [width, setWidth] = useState<number>(100); // Default width
-    const [height, setHeight] = useState<number>(50); // Default height
-    const [plates, setPlates] = useState<number>(5); // Default number of tectonic plates
-    const [visualizationType, setVisualizationType] = useState<string>('biomes'); // Default visualization type
-    const [tooltip, setTooltip] = useState<string | null>(null); // Tooltip state
-    const [mapPosition, setMapPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 }); // Map position
-    const [zoom, setZoom] = useState<number>(1); // Zoom level
+    const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number]; width: number }>>([]);
+    const [width, setWidth] = useState<number>(100);
+    const [height, setHeight] = useState<number>(80);
+    const [plates, setPlates] = useState<number>(7);
+    const [visualizationType, setVisualizationType] = useState<string>('biomes');
+    const [tooltip, setTooltip] = useState<string | null>(null);
+    const [mapPosition, setMapPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState<number>(1);
+    const [showRivers, setShowRivers] = useState<boolean>(true); // New state for toggling rivers
 
-    const mapWrapperRef = useRef<HTMLDivElement>(null); // Reference to the map-wrapper element
+    const mapWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
         setMap(newMap);
-        setRiverPaths(newRiverPaths); // Set river paths
+        setRiverPaths(newRiverPaths);
     }, [width, height, plates]);
 
     useEffect(() => {
@@ -45,11 +46,11 @@ const App: React.FC = () => {
     const handleGenerateMap = () => {
         const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
         setMap(newMap);
-        setRiverPaths(newRiverPaths); // Set river paths
+        setRiverPaths(newRiverPaths);
     };
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.button !== 0) return; // Only handle left-click
+        if (e.button !== 0) return;
         const startX = e.clientX;
         const startY = e.clientY;
         const initialPosition = { ...mapPosition };
@@ -95,7 +96,7 @@ const App: React.FC = () => {
                         <input
                             type="number"
                             value={width}
-                            onChange={(e) => setWidth(parseInt(e.target.value) || 1)}
+                            onChange={(e) => handleWidthChange(parseInt(e.target.value) || 1)}
                             min="10"
                         />
                     </label>
@@ -104,7 +105,7 @@ const App: React.FC = () => {
                         <input
                             type="number"
                             value={height}
-                            onChange={(e) => setHeight(parseInt(e.target.value) || 1)}
+                            onChange={(e) => handleHeightChange(parseInt(e.target.value) || 1)}
                             min="5"
                         />
                     </label>
@@ -132,11 +133,20 @@ const App: React.FC = () => {
                             <option value="plates">Tectonic Plates</option>
                         </select>
                     </label>
+                    <label>
+                        Show Rivers:
+                        <input
+                            type="checkbox"
+                            checked={showRivers}
+                            onChange={(e) => setShowRivers(e.target.checked)}
+                        />
+                    </label>
                 </div>
             </header>
             <div
                 className="map-wrapper"
-                ref={mapWrapperRef} // Attach the ref to the map-wrapper
+                ref={mapWrapperRef}
+                onMouseDown={handleMouseDown}
                 style={{
                     transform: `translate(${mapPosition.x}px, ${mapPosition.y}px) scale(${zoom})`,
                     transformOrigin: 'center',
@@ -145,10 +155,10 @@ const App: React.FC = () => {
                 {map && (
                     <HexGrid
                         map={map}
-                        riverPaths={riverPaths} // Pass river paths to HexGrid
+                        riverPaths={showRivers ? riverPaths : []} // Conditionally pass river paths
                         visualizationType={visualizationType}
                         plates={plates}
-                        setTooltip={setTooltip} // Pass setTooltip to HexGrid
+                        setTooltip={setTooltip}
                     />
                 )}
             </div>
