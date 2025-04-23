@@ -180,7 +180,7 @@ body {
 }
 
 .hex-tile.coral-reef {
-    fill: #ff7f50; /* Coral color */
+    fill: #40e0d0; /* Turquoise color */
 }
 
 /* Hot and dry biomes */
@@ -311,21 +311,4 @@ body {
 
 .hex-tile.rocky-mountain {
     fill: #696969; /* Dim gray */
-}
-
-/* Volcanic biomes */
-.hex-tile.volcano {
-    fill: #ff4500; /* Orange red */
-}
-
-.hex-tile.lava-field {
-    fill: #8b0000; /* Dark red */
-}
-
-.hex-tile.wasteland {
-    fill: #a0522d; /* Saddle brown */
-}
-
-.hex-tile.lake {
-    fill: #4682b4; /* Steel blue */
 }

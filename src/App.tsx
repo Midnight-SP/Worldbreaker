@@ -4,7 +4,7 @@ import { generateMap } from './utils/mapGenerator';
 import './styles/App.css';
 
 const App: React.FC = () => {
-    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }>> | null>(null);
+    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; features: string[]}>> | null>(null);
     const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number]; width: number }>>([]);
     const [width, setWidth] = useState<number>(100);
     const [height, setHeight] = useState<number>(80);
@@ -13,12 +13,14 @@ const App: React.FC = () => {
     const [tooltip, setTooltip] = useState<string | null>(null);
     const [mapPosition, setMapPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [zoom, setZoom] = useState<number>(1);
-    const [showRivers, setShowRivers] = useState<boolean>(true); // New state for toggling rivers
+    const [showFeatures, setShowFeatures] = useState<boolean>(true); // New state for toggling features
 
     const mapWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
+        console.log('Generated map:', newMap);
+        console.log('Generated river paths:', newRiverPaths);
         setMap(newMap);
         setRiverPaths(newRiverPaths);
     }, [width, height, plates]);
@@ -134,11 +136,11 @@ const App: React.FC = () => {
                         </select>
                     </label>
                     <label>
-                        Show Rivers:
+                        Show Features:
                         <input
                             type="checkbox"
-                            checked={showRivers}
-                            onChange={(e) => setShowRivers(e.target.checked)}
+                            checked={showFeatures}
+                            onChange={(e) => setShowFeatures(e.target.checked)}
                         />
                     </label>
                 </div>
@@ -155,10 +157,11 @@ const App: React.FC = () => {
                 {map && (
                     <HexGrid
                         map={map}
-                        riverPaths={showRivers ? riverPaths : []} // Conditionally pass river paths
+                        riverPaths={showFeatures ? riverPaths : []} // Conditionally pass river paths
                         visualizationType={visualizationType}
                         plates={plates}
                         setTooltip={setTooltip}
+                        showFeatures={showFeatures} // Pass the new prop
                     />
                 )}
             </div>

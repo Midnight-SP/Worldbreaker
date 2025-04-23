@@ -1,5 +1,5 @@
 export function getHexNeighbors(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; hasRiver: boolean }>>,
+    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[] }>>,
     row: number,
     col: number,
     height: number,

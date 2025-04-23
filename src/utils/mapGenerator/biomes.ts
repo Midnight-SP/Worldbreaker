@@ -52,12 +52,4 @@ export const landBiomes = [
     { name: 'mountain', altitude: 0.9, temperature: 0.3, humidity: 0.3, vegetation: 0.1 },
     { name: 'alpine', altitude: 1, temperature: 0.1, humidity: 0.4, vegetation: 0.1 },
     { name: 'rocky-mountain', altitude: 0.9, temperature: 0.3, humidity: 0.2, vegetation: 0.1 },
-
-    // Volcanic biomes
-    { name: 'volcano', altitude: 1, temperature: 1, humidity: 0.2, vegetation: 0 },
-    { name: 'lava-field', altitude: 0.7, temperature: 1, humidity: 0.1, vegetation: 0 },
-    { name: 'wasteland', altitude: 0.6, temperature: 0.8, humidity: 0.2, vegetation: 0.1 },
-
-    // Lake biome
-    { name: 'lake', altitude: 0, temperature: 0.5, humidity: 1, vegetation: 0.8 },
 ];

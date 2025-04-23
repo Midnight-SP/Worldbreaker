@@ -1,18 +1,15 @@
 import React from 'react';
 
 interface HexGridProps {
-    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }[][];
+    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; features: string[]}[][];
     riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number }>;
     visualizationType: string;
     plates: number;
     setTooltip: React.Dispatch<React.SetStateAction<string | null>>;
+    showFeatures: boolean; // New prop for toggling features
 }
 
-const HexGrid: React.FC<HexGridProps> = ({ map, riverPaths, visualizationType, plates, setTooltip }) => {
-    if (!map || map.length === 0) {
-        return <div>No map data available</div>;
-    }
-
+const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTooltip, showFeatures }) => {
     const hexWidth = 50;
     const hexHeight = Math.sqrt(3) / 2 * hexWidth;
 
@@ -22,7 +19,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, riverPaths, visualizationType, p
         return [x, y];
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; hasRiver: boolean }): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number}): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);
@@ -49,63 +46,87 @@ const HexGrid: React.FC<HexGridProps> = ({ map, riverPaths, visualizationType, p
             <svg
                 viewBox={`-${hexWidth / 2} -${hexHeight / 2} ${map[0].length * hexWidth * 0.75 + hexWidth} ${map.length * hexHeight + hexHeight}`}
             >
-                {/* Draw hexagons */}
                 {map.map((row, rowIndex) =>
                     row.map((tile, colIndex) => {
                         const [x, y] = getHexCenter(rowIndex, colIndex);
 
-                        return (
-                            <polygon
-                                key={`${rowIndex}-${colIndex}`}
-                                points={`
-                                    ${x + hexWidth / 2},${y}
-                                    ${x + hexWidth / 4},${y + hexHeight / 2}
-                                    ${x - hexWidth / 4},${y + hexHeight / 2}
-                                    ${x - hexWidth / 2},${y}
-                                    ${x - hexWidth / 4},${y - hexHeight / 2}
-                                    ${x + hexWidth / 4},${y - hexHeight / 2}
-                                `}
-                                className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
-                                fill={visualizationType !== 'biomes' ? getFillColor(tile) : undefined}
-                                onMouseEnter={() =>
-                                    setTooltip(
-                                        'Coordinates: ' +
-                                        `(${colIndex}, ${rowIndex})\n` +
-                                        `Altitude: ${tile.altitude.toFixed(2)}\n` +
-                                        `Temperature: ${tile.temperature.toFixed(2)}\n` +
-                                        `Humidity: ${tile.humidity.toFixed(2)}\n` +
-                                        `Vegetation: ${tile.vegetation.toFixed(2)}\n` +
-                                        `Latitude: ${tile.latitude.toFixed(2)}\n` +
-                                        `Terrain: ${tile.terrain}` +
-                                        (tile.hasRiver ? '\nHas River' : '') +
-                                        (visualizationType === 'plates' ? `\nPlate: ${tile.plate}` : '')
+                        const tileDescription = `
+                            Coordinates: (${colIndex}, ${rowIndex})
+                            Plate: ${tile.plate}
+                            Altitude: ${tile.altitude.toFixed(2)}
+                            Temperature: ${tile.temperature.toFixed(2)}
+                            Humidity: ${tile.humidity.toFixed(2)}
+                            Vegetation: ${tile.vegetation.toFixed(2)}
+                            Latitude: ${tile.latitude.toFixed(2)}
+                            Biome: ${tile.terrain}
+                            Features: ${tile.features.join(', ')}
+                        `;
 
-                                    )
-                                }
-                                onMouseLeave={() => setTooltip(null)}
-                            />
+                        return (
+                            <g key={`${rowIndex}-${colIndex}`}>
+                                {/* Hexagon */}
+                                <polygon
+                                    points={`
+                                        ${x + hexWidth / 2},${y}
+                                        ${x + hexWidth / 4},${y + hexHeight / 2}
+                                        ${x - hexWidth / 4},${y + hexHeight / 2}
+                                        ${x - hexWidth / 2},${y}
+                                        ${x - hexWidth / 4},${y - hexHeight / 2}
+                                        ${x + hexWidth / 4},${y - hexHeight / 2}
+                                    `}
+                                    className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
+                                    fill={visualizationType !== 'biomes' ? getFillColor(tile) : undefined}
+                                    onMouseEnter={() => setTooltip(tileDescription)}
+                                    onMouseLeave={() => setTooltip(null)}
+                                />
+                                {showFeatures && tile.features.includes('source') && (
+                                    <image
+                                        href="/icons/source-icon.svg"
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(`Source at (${colIndex}, ${rowIndex})`)}
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                                {showFeatures && tile.features.includes('river') && (
+                                    <image
+                                        href="/icons/river-icon.svg"
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(`River at (${colIndex}, ${rowIndex})`)}
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                                {showFeatures && tile.features.includes('lake') && (
+                                    <image
+                                        href="/icons/lake-icon.svg"
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(`Lake at (${colIndex}, ${rowIndex})`)}
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                                {showFeatures && tile.features.includes('volcano') && (
+                                    <image
+                                        href="/icons/volcano-icon.svg"
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(`Volcano at (${colIndex}, ${rowIndex})`)}
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                            </g>
                         );
                     })
                 )}
-
-                {/* Draw rivers */}
-                    {riverPaths.map(({ start, end, width }, index) => {
-                        const [startX, startY] = getHexCenter(start[0], start[1]);
-                        const [endX, endY] = getHexCenter(end[0], end[1]);
-
-                        return (
-                            <line
-                                key={index}
-                                x1={startX}
-                                y1={startY}
-                                x2={endX}
-                                y2={endY}
-                                stroke="blue"
-                                strokeWidth={width} // Use the river width
-                                strokeLinecap="round" // Smooth line ends
-                            />
-                        );
-                    })}
             </svg>
         </div>
     );

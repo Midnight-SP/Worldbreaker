@@ -1,4 +1,15 @@
-export function smoothMap(map: Array<Array<{ altitude: number; temperature: number; humidity: number }>>): void {
+import { getHexNeighbors } from "./hexNeighbors";
+
+export function smoothMap(map: Array<Array<{
+    altitude: number; 
+    temperature: number; 
+    humidity: number; 
+    vegetation: number; 
+    terrain: string; 
+    latitude: number; 
+    plate: number; 
+    features: string[];
+}>>): void {
     const height = map.length;
     const width = map[0].length;
 
@@ -7,7 +18,8 @@ export function smoothMap(map: Array<Array<{ altitude: number; temperature: numb
 
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
-            const neighbors = getNeighbors(map, row, col, height, width);
+            const neighborCoords = getHexNeighbors(map, row, col, height, width);
+            const neighbors = neighborCoords.map(coord => map[coord.row][coord.col]);
 
             // Calculate the average values for altitude, temperature, and humidity
             const avgAltitude = neighbors.reduce((sum, tile) => sum + tile.altitude, map[row][col].altitude) / (neighbors.length + 1);
@@ -39,118 +51,43 @@ export function smoothMap(map: Array<Array<{ altitude: number; temperature: numb
 
 // Apply continental drift effects
 export function applyContinentalDrift(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number }>>,
+    map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number; features: string[] }>>,
     plateCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>,
     width: number
 ): void {
     const height = map.length;
 
-    // Calculate the size of each continent
-    const continentSizes = Array(plateCenters.length).fill(0);
-    for (let row = 0; row < height; row++) {
-        for (let col = 0; col < width; col++) {
-            const tile = map[row][col];
-            continentSizes[tile.plate]++;
-        }
-    }
-
-    // Iterate through each tile and adjust altitude based on drift interactions
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
             const continent = tile.plate;
             const drift = plateCenters[continent].drift;
 
-            // Calculate the neighboring tile in the drift direction
             const neighborX = (col + drift.dx + width) % width; // Wrap horizontally
             const neighborY = row + drift.dy;
 
-            // Ensure the neighbor is within bounds
             if (neighborY >= 0 && neighborY < height) {
                 const neighborTile = map[neighborY][neighborX];
 
-                // Check for convergence, divergence, or transform
+                // Check for plate convergence
                 if (neighborTile.plate !== continent) {
                     const neighborDrift = plateCenters[neighborTile.plate].drift;
 
-                    // Scale altitude changes based on continent size
-                    const continentScale = Math.log10(continentSizes[continent] + 1); // Logarithmic scaling
-                    const neighborScale = Math.log10(continentSizes[neighborTile.plate] + 1);
-
                     if (neighborDrift.dx === -drift.dx && neighborDrift.dy === -drift.dy) {
-                        // Convergence: Lower altitude (trench)
-                        applyAltitudeEffect(map, row, col, -0.2, height, width);
-                        applyAltitudeEffect(map, neighborY, neighborX, -0.2, height, width);
-                    } else if (neighborDrift.dx === drift.dx && neighborDrift.dy === drift.dy) {
-                        // Divergence: Higher altitude (ridge)
-                        applyAltitudeEffect(map, row, col, 0.2, height, width);
-                        applyAltitudeEffect(map, neighborY, neighborX, 0.2, height, width);
+                        // Convergence: Generate a volcano with a 50% chance
+                        if (Math.random() < 0.5) {
+                            tile.features.push('volcano');
+                            console.log(`Volcano generated at (${row}, ${col}) due to plate convergence.`);
+                        }
                     }
-                    // Transform: No altitude changes
                 }
             }
-        }
-    }
-}
 
-// Apply altitude effect to a tile and its neighbors
-function applyAltitudeEffect(
-    map: Array<Array<{ altitude: number }>>,
-    row: number,
-    col: number,
-    altitudeChange: number,
-    height: number,
-    width: number
-): void {
-    const effectRadius = 2; // Radius of the effect (wider for larger continents)
-    for (let dy = -effectRadius; dy <= effectRadius; dy++) {
-        for (let dx = -effectRadius; dx <= effectRadius; dx++) {
-            const neighborX = col + dx;
-            const neighborY = row + dy;
-
-            // Ensure the neighbor is within bounds and within the effect radius
-            if (
-                neighborX >= 0 &&
-                neighborX < width &&
-                neighborY >= 0 &&
-                neighborY < height &&
-                Math.abs(dx) + Math.abs(dy) <= effectRadius // Hexagonal distance
-            ) {
-                const neighborTile = map[neighborY][neighborX];
-                neighborTile.altitude = Math.max(
-                    Math.min(neighborTile.altitude + altitudeChange * (1 - (Math.abs(dx) + Math.abs(dy)) / effectRadius), 1),
-                    -1
-                );
+            // Add a small random chance for volcano generation anywhere
+            if (Math.random() < 0.005) { // 0.5% chance for random volcano
+                tile.features.push('volcano');
+                console.log(`Random volcano generated at (${row}, ${col}).`);
             }
         }
     }
-}
-
-function getNeighbors(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number }>>,
-    row: number,
-    col: number,
-    height: number,
-    width: number
-): Array<{ altitude: number; temperature: number; humidity: number }> {
-    const neighbors = [];
-    const directions = [
-        { dx: 1, dy: 0 }, // Right
-        { dx: -1, dy: 0 }, // Left
-        { dx: 0, dy: -1 }, // Up
-        { dx: 0, dy: 1 }, // Down
-        { dx: 1, dy: -1 }, // Up-right
-        { dx: -1, dy: 1 }, // Down-left
-    ];
-
-    for (const { dx, dy } of directions) {
-        const neighborX = (col + dx + width) % width; // Wrap horizontally
-        const neighborY = row + dy;
-
-        if (neighborY >= 0 && neighborY < height) {
-            neighbors.push(map[neighborY][neighborX]);
-        }
-    }
-
-    return neighbors;
 }

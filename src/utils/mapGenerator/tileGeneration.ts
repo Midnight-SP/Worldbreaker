@@ -1,8 +1,17 @@
 import { determineTerrain } from './terrain';
 
 // Generate a single tile
-export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; hasRiver: boolean } {
-    const altitude = Math.random() * 1.6 - 0.75; // Base altitude between -0.2 and 0.2
+export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { 
+    altitude: number; 
+    temperature: number; 
+    humidity: number; 
+    vegetation: number; 
+    terrain: string; 
+    latitude: number; 
+    plate: number; 
+    features: string[];
+} {
+    const altitude = Math.random() * 2 - 0.95; // Base altitude between -0.2 and 0.2
 
     // Adjust latitude based on row and column
     const baseLatitude = 1 - (rowIndex / (totalRows - 0.5)) * 2; // Latitude from 1 (top) to -1 (bottom)
@@ -19,11 +28,18 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
     // Adjust humidity based on latitude
     const humidity = Math.min((1 - absLatitude) * Math.random() * 0.9 + Math.random() * 0.3, 1);
 
-     //Adjust vegetation based on altitude
-     const vegetation = Math.min((1 - altitude) * Math.random() * 0.9 + Math.random() * 0.3, 1); // Vegetation from 0 to 1 based on altitude
-
     const terrain = determineTerrain(altitude, temperature, humidity);
-    return { altitude, temperature, humidity, vegetation, terrain, latitude, hasRiver: false };
+
+    return { 
+        altitude, 
+        temperature, 
+        humidity, 
+        vegetation: 0, 
+        terrain, 
+        latitude, 
+        plate: -1,
+        features: [] // Initialize as an empty array
+    };
 }
 
 // Find the closest plate center to a tile
