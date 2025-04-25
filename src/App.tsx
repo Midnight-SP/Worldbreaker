@@ -21,11 +21,10 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
-        console.log('Generated map:', newMap);
-        console.log('Generated river paths:', newRiverPaths);
+        console.log('Generated map with new latitude mode:', latitudeMode);
         setMap(newMap);
         setRiverPaths(newRiverPaths);
-    }, [width, height, plates]);
+    }, [latitudeMode, width, height, plates]);
 
     useEffect(() => {
         const mapWrapper = mapWrapperRef.current;

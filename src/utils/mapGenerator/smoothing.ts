@@ -1,4 +1,5 @@
-import { getHexNeighbors } from "./hexNeighbors";
+import { getHexNeighbors, getNumericHexNeighbors } from "./hexNeighbors";
+import { createNoise2D } from 'simplex-noise';
 
 export function smoothMap(map: Array<Array<{
     altitude: number; 
@@ -50,44 +51,68 @@ export function smoothMap(map: Array<Array<{
 }
 
 // Apply continental drift effects
-export function applyContinentalDrift(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; terrain: string; latitude: number; plate: number; features: string[] }>>,
-    plateCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>,
-    width: number
+export function applyPlateBoundaryEffects(
+    map: Array<Array<{ altitude: number; features: string[]; plate: number }>>,
+    boundaries: Array<{ row: number; col: number; type: 'convergent' | 'divergent' | 'transform' }>,
+    plateSizes: Array<number>
 ): void {
-    const height = map.length;
+    const maxPlateSize = Math.max(...plateSizes); // Find the largest plate size for normalization
+
+    for (const boundary of boundaries) {
+        const tile = map[boundary.row][boundary.col];
+
+        // Get the size of the plates involved in this boundary
+        const plateSize = plateSizes[tile.plate];
+        const sizeFactor = plateSize / maxPlateSize; // Normalize the size to [0, 1]
+
+        if (boundary.type === 'convergent') {
+            // Convergent boundaries create mountains or volcanoes
+            tile.altitude += 0.3 * sizeFactor; // Scale altitude change by plate size
+            if (Math.random() < 0.3 * sizeFactor) { // Scale volcano probability by plate size
+                tile.features.push('volcano');
+            }
+        } else if (boundary.type === 'divergent') {
+            // Divergent boundaries create rift valleys
+            tile.altitude -= 0.2 * sizeFactor; // Scale altitude change by plate size
+        } else if (boundary.type === 'transform') {
+            // Transform boundaries create fault lines (no altitude change)
+            if (Math.random() < 0.2 * sizeFactor) { // Scale fault line probability by plate size
+                tile.features.push('fault-line');
+            }
+        }
+
+        // Clamp altitude to valid range
+        tile.altitude = Math.max(-1, Math.min(1, tile.altitude));
+    }
+}
+
+export function distortPlateBoundaries(
+    plateMap: Array<Array<number>>,
+    width: number,
+    height: number
+): Array<Array<number>> {
+    const noise = createNoise2D();
+    const noiseScale = 0.1; // Adjust for boundary distortion
+    const distortionThreshold = 0.3; // Lower threshold for more distortion
 
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
-            const tile = map[row][col];
-            const continent = tile.plate;
-            const drift = plateCenters[continent].drift;
+            const noiseValue = noise(row * noiseScale, col * noiseScale);
 
-            const neighborX = (col + drift.dx + width) % width; // Wrap horizontally
-            const neighborY = row + drift.dy;
+            // Use noise to randomly shift plate assignments near boundaries
+            if (Math.abs(noiseValue) > distortionThreshold) {
+                const neighbors = getNumericHexNeighbors(plateMap, row, col, height, width);
+                const neighborPlates = neighbors.map(
+                    (neighbor) => plateMap[neighbor.row][neighbor.col]
+                );
 
-            if (neighborY >= 0 && neighborY < height) {
-                const neighborTile = map[neighborY][neighborX];
-
-                // Check for plate convergence
-                if (neighborTile.plate !== continent) {
-                    const neighborDrift = plateCenters[neighborTile.plate].drift;
-
-                    if (neighborDrift.dx === -drift.dx && neighborDrift.dy === -drift.dy) {
-                        // Convergence: Generate a volcano with a 50% chance
-                        if (Math.random() < 0.5) {
-                            tile.features.push('volcano');
-                            console.log(`Volcano generated at (${row}, ${col}) due to plate convergence.`);
-                        }
-                    }
+                // Randomly assign a neighboring plate with higher probability
+                if (neighborPlates.length > 0) {
+                    plateMap[row][col] = neighborPlates[Math.floor(Math.random() * neighborPlates.length)];
                 }
-            }
-
-            // Add a small random chance for volcano generation anywhere
-            if (Math.random() < 0.005) { // 0.5% chance for random volcano
-                tile.features.push('volcano');
-                console.log(`Random volcano generated at (${row}, ${col}).`);
             }
         }
     }
+
+    return plateMap;
 }

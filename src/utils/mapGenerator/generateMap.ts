@@ -1,28 +1,61 @@
 import { driftDirections } from './driftDirections';
 import { determineTerrain } from './terrain';
-import { applyContinentalDrift, smoothMap } from './smoothing';
-import { generateTile, findClosestPlate } from './tileGeneration';
+import { applyPlateBoundaryEffects, smoothMap, distortPlateBoundaries } from './smoothing';
+import { generateTile, identifyPlateBoundaries, assignPlatesUsingVoronoi, calculatePlateSizes } from './tileGeneration';
 import { generateRivers } from './rivers';
 import { applyRainShadowEffect } from './rainShadowEffect';
 import { getHexNeighbors } from './hexNeighbors';
 import { oceanBiomes } from './biomes';
 import { applyFeatureEffects } from './applyFeatureEffects';
 import { adjustVegetationBasedOnWater } from './vegetation';
+import { createNoise2D } from 'simplex-noise';
+
 
 export function generateMap(width: number, height: number, plates: number, latitudeMode: 'full' | 'partial') {
-    const plateCenters = Array.from({ length: plates }, () => ({
+    const baseNoise = createNoise2D();
+    const detailNoise1 = createNoise2D();
+    const detailNoise2 = createNoise2D();
+    const temperatureNoise = createNoise2D();
+    const humidityNoise = createNoise2D();
+
+    // Generate and distort the plate map
+    let plateMap = assignPlatesUsingVoronoi(width, height, plates);
+    plateMap = distortPlateBoundaries(plateMap, width, height);
+
+    const plateCenters = Array.from({ length: plates }, (_, i) => ({
         x: Math.floor(Math.random() * width),
         y: Math.floor(Math.random() * height),
         drift: driftDirections[Math.floor(Math.random() * driftDirections.length)],
     }));
 
+    // Calculate plate sizes
+    const plateSizes = calculatePlateSizes(plateMap, plates);
+
+    // Generate the map tiles
     const map = Array.from({ length: height }, (_, rowIndex) =>
         Array(width).fill(null).map((_, colIndex) => {
-            const tile = generateTile(rowIndex, colIndex, height, latitudeMode);
-            const closestPlate = findClosestPlate(colIndex, rowIndex, plateCenters, width);
-            return { ...tile, plate: closestPlate };
+            return generateTile(
+                rowIndex,
+                colIndex,
+                height,
+                width,
+                plateCenters,
+                latitudeMode,
+                baseNoise,
+                detailNoise1,
+                detailNoise2,
+                temperatureNoise,
+                humidityNoise
+            );
         })
     );
+
+    // Assign plates to tiles
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            map[row][col].plate = plateMap[row][col];
+        }
+    }
 
     // Randomly assign sources to some tiles with altitude >= 0.4 and ensure no neighboring sources or ocean biomes
     const sourceCount = Math.floor((width * height) / 100); // Adjust the density of sources
@@ -59,9 +92,13 @@ export function generateMap(width: number, height: number, plates: number, latit
         console.warn(`Source assignment stopped after ${maxRetries} retries. Assigned ${assignedSources} sources out of ${sourceCount}.`);
     }
 
-    console.log('Applying continental drift...');
-    applyContinentalDrift(map, plateCenters, width);
-    console.log('Continental drift applied.');
+    console.log('Identifying plate boundaries...');
+    const boundaries = identifyPlateBoundaries(map, height, width, plateCenters);
+    console.log(`Found ${boundaries.length} plate boundaries.`);
+
+    console.log('Applying plate boundary effects...');
+    applyPlateBoundaryEffects(map, boundaries, plateSizes);
+    console.log('Plate boundary effects applied.');
 
     console.log('Smoothing map...');
     smoothMap(map);

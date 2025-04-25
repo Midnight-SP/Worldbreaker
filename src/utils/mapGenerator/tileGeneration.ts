@@ -1,11 +1,18 @@
 import { determineTerrain } from './terrain';
+import { getHexNeighbors } from './hexNeighbors';
 
-// Generate a single tile
 export function generateTile(
     rowIndex: number,
     colIndex: number,
     totalRows: number,
-    latitudeMode: 'full' | 'partial'
+    totalCols: number,
+    plateCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>,
+    latitudeMode: 'full' | 'partial',
+    baseNoise: (x: number, y: number) => number,
+    detailNoise1: (x: number, y: number) => number,
+    detailNoise2: (x: number, y: number) => number,
+    temperatureNoise: (x: number, y: number) => number,
+    humidityNoise: (x: number, y: number) => number
 ): { 
     altitude: number; 
     temperature: number; 
@@ -16,7 +23,17 @@ export function generateTile(
     plate: number; 
     features: string[];
 } {
-    const altitude = Math.random() * 2 - 0.95;
+    const baseScale = 0.05; // Base scale for large landmasses
+    const detailScale1 = 0.1; // Scale for finer details
+    const detailScale2 = 0.2; // Scale for even finer details
+    const climateScale = 0.02; // Scale for temperature and humidity noise
+
+    const baseNoiseValue = baseNoise(rowIndex * baseScale, colIndex * baseScale);
+    const detailNoiseValue1 = detailNoise1(rowIndex * detailScale1, colIndex * detailScale1) * 0.3; // 30% amplitude
+    const detailNoiseValue2 = detailNoise2(rowIndex * detailScale2, colIndex * detailScale2) * 0.1; // 10% amplitude
+
+    // Combine noise layers to calculate the final noise value
+    const combinedNoiseValue = baseNoiseValue + detailNoiseValue1 + detailNoiseValue2;
 
     // Adjust latitude based on the selected mode
     const baseLatitude = latitudeMode === 'full'
@@ -26,13 +43,27 @@ export function generateTile(
     const latitudeOffset = (colIndex % 2 === 1) ? (1 / totalRows) : 0; // Offset for even/odd columns
     const latitude = baseLatitude - latitudeOffset;
 
-    // Adjust temperature and humidity based on latitude
+    // Find the closest plate and apply tectonic effects
+    const closestPlate = findClosestPlate(colIndex, rowIndex, plateCenters, totalCols);
+    const plateEffect = (closestPlate % 2 === 0 ? 0.2 : -0.2) * combinedNoiseValue; // Simulate plate uplift or subsidence
+
+    // Combine noise and plate effects to calculate altitude
+    const altitude = Math.max(-1, Math.min(1, combinedNoiseValue + plateEffect));
+
+    // Calculate temperature based on latitude and noise
+    const temperatureNoiseValue = temperatureNoise(rowIndex * climateScale, colIndex * climateScale) * 0.1; // Mild noise
     const absLatitude = Math.abs(latitude);
     const temperature = Math.min(
-        0.9 * Math.exp(-Math.pow(absLatitude - 0.3, 2) / 0.1) + 0.2 * Math.random() - 0.1 * Math.random(),
+        0.9 * Math.exp(-Math.pow(absLatitude - 0.3, 2) / 0.1) + temperatureNoiseValue,
         1
     );
-    const humidity = Math.min((1 - absLatitude) * Math.random() * 0.9 + Math.random() * 0.3, 1);
+
+    // Calculate humidity based on latitude and noise
+    const humidityNoiseValue = humidityNoise(rowIndex * climateScale, colIndex * climateScale) * 0.1; // Mild noise
+    const humidity = Math.min(
+        (1 - absLatitude) * 0.9 + humidityNoiseValue,
+        1
+    );
 
     const terrain = determineTerrain(altitude, temperature, humidity);
 
@@ -43,7 +74,7 @@ export function generateTile(
         vegetation: 0, 
         terrain, 
         latitude, 
-        plate: -1,
+        plate: closestPlate,
         features: [] 
     };
 }
@@ -72,4 +103,103 @@ export function findClosestPlate(
     });
 
     return closestPlates[Math.floor(Math.random() * closestPlates.length)];
+}
+
+export function identifyPlateBoundaries(
+    map: Array<Array<{ altitude: number; temperature: number; humidity: number; plate: number; features: string[] }>>,
+    height: number,
+    width: number,
+    plateCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>
+): Array<{ row: number; col: number; type: 'convergent' | 'divergent' | 'transform' }> {
+    const boundaries: Array<{ row: number; col: number; type: 'convergent' | 'divergent' | 'transform' }> = [];
+
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            const tile = map[row][col];
+            const neighbors = getHexNeighbors(map, row, col, height, width);
+
+            for (const neighbor of neighbors) {
+                const neighborTile = map[neighbor.row][neighbor.col];
+
+                if (tile.plate !== neighborTile.plate) {
+                    const currentPlate = plateCenters[tile.plate];
+                    const neighborPlate = plateCenters[neighborTile.plate];
+
+                    // Calculate relative drift direction
+                    const relativeDriftX = neighborPlate.drift.dx - currentPlate.drift.dx;
+                    const relativeDriftY = neighborPlate.drift.dy - currentPlate.drift.dy;
+
+                    // Determine boundary type based on relative drift
+                    let type: 'convergent' | 'divergent' | 'transform';
+                    if (relativeDriftX * (neighbor.col - col) + relativeDriftY * (neighbor.row - row) > 0) {
+                        type = 'divergent';
+                    } else if (relativeDriftX * (neighbor.col - col) + relativeDriftY * (neighbor.row - row) < 0) {
+                        type = 'convergent';
+                    } else {
+                        type = 'transform';
+                    }
+
+                    boundaries.push({ row, col, type });
+                }
+            }
+        }
+    }
+
+    return boundaries;
+}
+
+export function assignPlatesUsingVoronoi(
+    width: number,
+    height: number,
+    plates: number
+): Array<Array<number>> {
+    const plateCenters = Array.from({ length: plates }, () => ({
+        x: Math.floor(Math.random() * width),
+        y: Math.floor(Math.random() * height),
+    }));
+
+    const plateMap = Array.from({ length: height }, () =>
+        Array(width).fill(-1)
+    );
+
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            let closestPlate = -1;
+            let minDistance = Infinity;
+
+            for (let i = 0; i < plateCenters.length; i++) {
+                const center = plateCenters[i];
+                const dx = Math.min(Math.abs(center.x - col), width - Math.abs(center.x - col)); // Wrap horizontally
+                const dy = Math.abs(center.y - row);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPlate = i;
+                }
+            }
+
+            plateMap[row][col] = closestPlate;
+        }
+    }
+
+    return plateMap;
+}
+
+export function calculatePlateSizes(
+    plateMap: Array<Array<number>>,
+    plates: number
+): Array<number> {
+    const plateSizes = Array(plates).fill(0);
+
+    for (let row = 0; row < plateMap.length; row++) {
+        for (let col = 0; col < plateMap[row].length; col++) {
+            const plateId = plateMap[row][col];
+            if (plateId >= 0) {
+                plateSizes[plateId]++;
+            }
+        }
+    }
+
+    return plateSizes;
 }
