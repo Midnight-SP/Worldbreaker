@@ -19,7 +19,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
         return [x, y];
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number}): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number }): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);
@@ -50,6 +50,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                     row.map((tile, colIndex) => {
                         const [x, y] = getHexCenter(rowIndex, colIndex);
 
+                        // Build the tooltip description
                         const tileDescription = `
                             Coordinates: (${colIndex}, ${rowIndex})
                             Plate: ${tile.plate}
@@ -59,8 +60,8 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                             Vegetation: ${tile.vegetation.toFixed(2)}
                             Latitude: ${tile.latitude.toFixed(2)}
                             Biome: ${tile.terrain}
-                            Features: ${tile.features.join(', ')}
-                        `;
+                            ${showFeatures && tile.features.length > 0 ? `Features: ${tile.features.join(', ')}` : ''}
+                        `.trim();
 
                         return (
                             <g key={`${rowIndex}-${colIndex}`}>
@@ -86,7 +87,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(`Source at (${colIndex}, ${rowIndex})`)}
+                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
@@ -97,7 +98,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(`River at (${colIndex}, ${rowIndex})`)}
+                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
@@ -108,7 +109,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(`Lake at (${colIndex}, ${rowIndex})`)}
+                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
@@ -119,7 +120,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(`Volcano at (${colIndex}, ${rowIndex})`)}
+                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}

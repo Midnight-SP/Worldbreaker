@@ -14,17 +14,31 @@ export function adjustVegetationBasedOnWater(
 
             // Adjust vegetation based on proximity to water
             if (nearestWaterDistance !== null) {
-                // Use an exponential decay for vegetation falloff with added randomness
-                const baseIncrease = Math.max(0, Math.exp(-nearestWaterDistance / 2)); // Decay factor of 2
-                const randomFactor = Math.random() * 0.1 - 0.05; // Random variation in the range [-0.05, 0.05]
+                // Reduce the base increase for vegetation near water
+                const baseIncrease = Math.max(0, 0.2 - nearestWaterDistance * 0.03); // Lower base increase
+                const randomFactor = Math.random() * 0.04 - 0.02; // Random variation in the range [-0.02, 0.02]
                 const vegetationIncrease = Math.max(0, baseIncrease + randomFactor);
                 tile.vegetation = Math.min(tile.vegetation + vegetationIncrease, 1); // Clamp to [0, 1]
             } else {
-                // Decrease vegetation for tiles far from any water with added randomness
-                const randomFactor = Math.random() * 0.1 - 0.05; // Random variation in the range [-0.05, 0.05]
-                const vegetationDecrease = 0.2 + randomFactor;
+                // Increase the decrease for tiles far from water
+                const randomFactor = Math.random() * 0.04 - 0.02; // Random variation in the range [-0.02, 0.02]
+                const vegetationDecrease = 0.3 + randomFactor; // Higher decrease
                 tile.vegetation = Math.max(tile.vegetation - vegetationDecrease, 0); // Clamp to [0, 1]
             }
+
+            // Factor in altitude, temperature, and humidity for natural variation
+            const altitudeFactor = Math.max(0, 1 - Math.abs(tile.altitude)) * 0.15; // Lower altitude impact
+            const temperatureFactor = Math.max(0, 1 - Math.abs(tile.temperature - 0.5)) * 0.2; // Lower temperature impact
+            const humidityFactor = tile.humidity * 0.4; // Lower humidity impact
+
+            // Combine factors to adjust vegetation
+            tile.vegetation = Math.min(
+                tile.vegetation + altitudeFactor + temperatureFactor + humidityFactor,
+                1
+            );
+
+            // Add a small random variation to ensure diversity
+            tile.vegetation = Math.max(0, Math.min(tile.vegetation + (Math.random() * 0.03 - 0.015), 1));
         }
     }
 }

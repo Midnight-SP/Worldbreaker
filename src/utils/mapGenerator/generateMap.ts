@@ -9,7 +9,7 @@ import { oceanBiomes } from './biomes';
 import { applyFeatureEffects } from './applyFeatureEffects';
 import { adjustVegetationBasedOnWater } from './vegetation';
 
-export function generateMap(width: number, height: number, plates: number) {
+export function generateMap(width: number, height: number, plates: number, latitudeMode: 'full' | 'partial') {
     const plateCenters = Array.from({ length: plates }, () => ({
         x: Math.floor(Math.random() * width),
         y: Math.floor(Math.random() * height),
@@ -18,7 +18,7 @@ export function generateMap(width: number, height: number, plates: number) {
 
     const map = Array.from({ length: height }, (_, rowIndex) =>
         Array(width).fill(null).map((_, colIndex) => {
-            const tile = generateTile(rowIndex, colIndex, height);
+            const tile = generateTile(rowIndex, colIndex, height, latitudeMode);
             const closestPlate = findClosestPlate(colIndex, rowIndex, plateCenters, width);
             return { ...tile, plate: closestPlate };
         })

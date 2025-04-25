@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import HexGrid from './components/HexGrid';
 import { generateMap } from './utils/mapGenerator';
 import './styles/App.css';
+import { calculateWorldStats } from './utils/mapGenerator/calculateWorldStats';
 
 const App: React.FC = () => {
     const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; features: string[]}>> | null>(null);
@@ -13,12 +14,13 @@ const App: React.FC = () => {
     const [tooltip, setTooltip] = useState<string | null>(null);
     const [mapPosition, setMapPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [zoom, setZoom] = useState<number>(1);
-    const [showFeatures, setShowFeatures] = useState<boolean>(true); // New state for toggling features
+    const [showFeatures, setShowFeatures] = useState<boolean>(true);
+    const [latitudeMode, setLatitudeMode] = useState<'full' | 'partial'>('full');
 
     const mapWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
+        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
         console.log('Generated map:', newMap);
         console.log('Generated river paths:', newRiverPaths);
         setMap(newMap);
@@ -46,7 +48,7 @@ const App: React.FC = () => {
     }, []);
 
     const handleGenerateMap = () => {
-        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates);
+        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
         setMap(newMap);
         setRiverPaths(newRiverPaths);
     };
@@ -143,6 +145,64 @@ const App: React.FC = () => {
                             onChange={(e) => setShowFeatures(e.target.checked)}
                         />
                     </label>
+                    <label>
+                        Latitude Mode:
+                        <select
+                            value={latitudeMode}
+                            onChange={(e) => setLatitudeMode(e.target.value === 'full' ? 'full' : 'partial')}
+                        >
+                            <option value="full">Full (1 to -1)</option>
+                            <option value="partial">Partial (1 to 0)</option>
+                        </select>
+                    </label>
+                </div>
+                <div className="world-info">
+                    {map && (
+                        <>
+                            <div className="info-item">
+                                <label>Average Altitude</label>
+                                <p>{calculateWorldStats(map).averageAltitude.toFixed(2)}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Average Temperature</label>
+                                <p>{calculateWorldStats(map).averageTemperature.toFixed(2)}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Average Humidity</label>
+                                <p>{calculateWorldStats(map).averageHumidity.toFixed(2)}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Average Vegetation</label>
+                                <p>{calculateWorldStats(map).averageVegetation.toFixed(2)}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Ocean Coverage</label>
+                                <p>{calculateWorldStats(map).oceanCoverage.toFixed(2)}%</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Sources</label>
+                                <p>{calculateWorldStats(map).sourceCount}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Lakes</label>
+                                <p>{calculateWorldStats(map).lakeCount}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Volcanoes</label>
+                                <p>{calculateWorldStats(map).volcanoCount}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Top 3 Biomes</label>
+                                <ul>
+                                    {calculateWorldStats(map).topBiomes.map(({ biome, percentage }) => (
+                                        <li key={biome}>
+                                            {biome}: {percentage}%
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </>
+                    )}
                 </div>
             </header>
             <div

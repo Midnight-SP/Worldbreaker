@@ -1,7 +1,12 @@
 import { determineTerrain } from './terrain';
 
 // Generate a single tile
-export function generateTile(rowIndex: number, colIndex: number, totalRows: number): { 
+export function generateTile(
+    rowIndex: number,
+    colIndex: number,
+    totalRows: number,
+    latitudeMode: 'full' | 'partial'
+): { 
     altitude: number; 
     temperature: number; 
     humidity: number; 
@@ -11,21 +16,22 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
     plate: number; 
     features: string[];
 } {
-    const altitude = Math.random() * 2 - 0.95; // Base altitude between -0.2 and 0.2
+    const altitude = Math.random() * 2 - 0.95;
 
-    // Adjust latitude based on row and column
-    const baseLatitude = 1 - (rowIndex / (totalRows - 0.5)) * 2; // Latitude from 1 (top) to -1 (bottom)
+    // Adjust latitude based on the selected mode
+    const baseLatitude = latitudeMode === 'full'
+        ? 1 - (rowIndex / (totalRows - 0.5)) * 2 // Original mode: 1 to -1
+        : 1 - (rowIndex / totalRows); // New mode: 1 to 0
+
     const latitudeOffset = (colIndex % 2 === 1) ? (1 / totalRows) : 0; // Offset for even/odd columns
-    let latitude = baseLatitude - latitudeOffset;
+    const latitude = baseLatitude - latitudeOffset;
 
-    // Adjust temperature based on latitude
+    // Adjust temperature and humidity based on latitude
     const absLatitude = Math.abs(latitude);
     const temperature = Math.min(
         0.9 * Math.exp(-Math.pow(absLatitude - 0.3, 2) / 0.1) + 0.2 * Math.random() - 0.1 * Math.random(),
         1
-    ); // Peak near tropics (0.9), lower near poles (0) and equator (0.5)
-
-    // Adjust humidity based on latitude
+    );
     const humidity = Math.min((1 - absLatitude) * Math.random() * 0.9 + Math.random() * 0.3, 1);
 
     const terrain = determineTerrain(altitude, temperature, humidity);
@@ -38,7 +44,7 @@ export function generateTile(rowIndex: number, colIndex: number, totalRows: numb
         terrain, 
         latitude, 
         plate: -1,
-        features: [] // Initialize as an empty array
+        features: [] 
     };
 }
 

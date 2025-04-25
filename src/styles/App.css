@@ -70,6 +70,69 @@ body {
     background-color: #5ba8a0;
 }
 
+/* World info styling */
+.world-info {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to the next line */
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px; /* Reduce spacing between items */
+    margin: 10px auto; /* Reduce margin */
+    padding: 10px; /* Reduce padding */
+    background-color: #2a2a3b; /* Slightly lighter background */
+    color: #f0f0f0;
+    border: 1px solid #76c7c0; /* Add border similar to controls */
+    border-radius: 8px; /* Slightly smaller border radius */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce shadow size */
+    max-width:max-content; /* Reduce max width */
+    text-align: center;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1e1e2f; /* Darker background for contrast */
+    padding: 10px; /* Reduce padding */
+    border-radius: 6px; /* Slightly smaller border radius */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Reduce shadow size */
+    width: min-content; /* Reduce width */
+}
+
+.info-item label {
+    font-weight: bold;
+    color: #76c7c0;
+    margin-bottom: 3px; /* Reduce spacing between label and value */
+    font-size: 0.9rem; /* Reduce font size */
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 0.85rem; /* Reduce font size */
+    color: #f0f0f0;
+}
+
+.info-item ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.8rem; /* Reduce font size */
+    color: #f0f0f0;
+    display: flex; /* Make the list horizontal */
+    justify-content: center; /* Center the items */
+    gap: 10px; /* Add spacing between items */
+}
+
+.info-item ul li {
+    margin: 0; /* Remove vertical margin */
+    padding: 0 5px; /* Add horizontal padding for spacing */
+    border-left: 1px solid #76c7c0; /* Add a separator between items */
+}
+
+.info-item ul li:first-child {
+    border-left: none; /* Remove separator for the first item */
+}
+
 /* Map wrapper */
 .map-wrapper {
     margin-top: 150px; /* Ensure space for the fixed header */

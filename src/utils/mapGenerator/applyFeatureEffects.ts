@@ -13,27 +13,27 @@ export function applyFeatureEffects(
             if (tile.features.includes('volcano')) {
                 // Volcanoes increase temperature in the surrounding area
                 applyEffectToNeighbors(map, row, col, height, width, {
-                    temperature: 0.2, // Increase temperature
+                    temperature: 0.1, // Reduced temperature increase
                 });
             }
 
             if (tile.features.includes('lake')) {
                 // Lakes increase humidity in the surrounding area
                 applyEffectToNeighbors(map, row, col, height, width, {
-                    humidity: 0.3, // Increase humidity
+                    humidity: 0.15, // Reduced humidity increase
                 });
             }
 
             if (tile.features.includes('river')) {
                 // Rivers slightly increase humidity in the surrounding area
                 applyEffectToNeighbors(map, row, col, height, width, {
-                    humidity: 0.1, // Slight increase in humidity
+                    humidity: 0.05, // Slightly reduced humidity increase
                 });
             }
 
             if (tile.features.includes('source')) {
                 // Sources slightly increase humidity locally
-                tile.humidity = Math.min(tile.humidity + 0.2, 1); // Clamp to [0, 1]
+                tile.humidity = Math.min(tile.humidity + 0.1, 1); // Reduced local humidity increase
             }
         }
     }
