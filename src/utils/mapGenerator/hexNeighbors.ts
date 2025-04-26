@@ -27,9 +27,10 @@ export function getHexNeighbors(
 
     for (const { dx, dy } of directions) {
         const neighborRow = row + dy;
-        const neighborCol = (col + dx + width) % width; // Wrap horizontally
+        const neighborCol = col + dx;
 
-        if (neighborRow >= 0 && neighborRow < height) {
+        // Ensure neighbors are within bounds
+        if (neighborRow >= 0 && neighborRow < height && neighborCol >= 0 && neighborCol < width) {
             neighbors.push({ row: neighborRow, col: neighborCol });
         }
     }
@@ -66,7 +67,7 @@ export function getNumericHexNeighbors(
 
     for (const { dx, dy } of directions) {
         const neighborRow = row + dy;
-        const neighborCol = (col + dx + width) % width; // Wrap horizontally
+        const neighborCol = col + dx;
 
         if (neighborRow >= 0 && neighborRow < height) {
             neighbors.push({ row: neighborRow, col: neighborCol });

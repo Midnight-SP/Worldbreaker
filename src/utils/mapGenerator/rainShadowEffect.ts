@@ -13,9 +13,9 @@ export function applyRainShadowEffect(
 
             if (tile.altitude > 0.6) { // High altitude (mountains)
                 const shadowRow = row + windDirection.dy;
-                const shadowCol = (col + windDirection.dx + width) % width; // Wrap horizontally
+                const shadowCol = col + windDirection.dx; // No wrapping
 
-                if (shadowRow >= 0 && shadowRow < height) {
+                if (shadowRow >= 0 && shadowRow < height && shadowCol >= 0 && shadowCol < width) {
                     map[shadowRow][shadowCol].humidity *= 0.5; // Reduce humidity in the rain shadow
                 }
             }

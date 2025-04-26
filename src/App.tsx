@@ -5,7 +5,7 @@ import './styles/App.css';
 import { calculateWorldStats } from './utils/mapGenerator/calculateWorldStats';
 
 const App: React.FC = () => {
-    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; features: string[]}>> | null>(null);
+    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; habitability: number; terrain: string; latitude: number; plate: number; features: string[]}>> | null>(null);
     const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number]; width: number }>>([]);
     const [width, setWidth] = useState<number>(100);
     const [height, setHeight] = useState<number>(80);
@@ -20,6 +20,12 @@ const App: React.FC = () => {
     const mapWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        // Validation: Ensure width and height are valid
+        if (!width || !height || width < 10 || height < 5) {
+            console.warn('Invalid dimensions. Width must be at least 10 and height must be at least 5.');
+            return; // Do not generate a new map
+        }
+    
         const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
         console.log('Generated map with new latitude mode:', latitudeMode);
         setMap(newMap);
@@ -47,9 +53,18 @@ const App: React.FC = () => {
     }, []);
 
     const handleGenerateMap = () => {
-        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
-        setMap(newMap);
-        setRiverPaths(newRiverPaths);
+        if (width <= 0 || height <= 0 || plates <= 0) {
+            console.warn('Width, height, and plate count must be greater than 0.');
+            return; // Do not generate a new map
+        }
+    
+        try {
+            const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
+            setMap(newMap);
+            setRiverPaths(newRiverPaths);
+        } catch (error) {
+            console.error('Failed to generate map:', error);
+        }
     };
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -76,17 +91,19 @@ const App: React.FC = () => {
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleWidthChange = (newWidth: number) => {
-        setWidth(newWidth);
-        if (height > newWidth * 0.8) {
-            setHeight(Math.floor(newWidth * 0.8)); // Adjust height to be at most 80% of the width
-        }
+    const handleWidthChange = (newWidth: number | string) => {
+        const parsedWidth = parseInt(newWidth as string, 10);
+        setWidth(isNaN(parsedWidth) ? 0 : parsedWidth); // Set to 0 if the input is invalid
     };
     
-    const handleHeightChange = (newHeight: number) => {
-        if (newHeight <= width * 0.8) {
-            setHeight(newHeight); // Allow height changes only if within the 80% constraint
-        }
+    const handleHeightChange = (newHeight: number | string) => {
+        const parsedHeight = parseInt(newHeight as string, 10);
+        setHeight(isNaN(parsedHeight) ? 0 : parsedHeight); // Set to 0 if the input is invalid
+    };
+
+    const handlePlatesChange = (newPlates: number | string) => {
+        const parsedPlates = parseInt(newPlates as string, 10);
+        setPlates(isNaN(parsedPlates) ? 0 : parsedPlates); // Default to 1 if invalid
     };
 
     return (
@@ -98,30 +115,32 @@ const App: React.FC = () => {
                         Width:
                         <input
                             type="number"
-                            value={width}
-                            onChange={(e) => handleWidthChange(parseInt(e.target.value) || 1)}
-                            min="10"
+                            value={width || ''} // Show an empty string if width is 0
+                            onChange={(e) => handleWidthChange(e.target.value)}
                         />
                     </label>
                     <label>
                         Height:
                         <input
                             type="number"
-                            value={height}
-                            onChange={(e) => handleHeightChange(parseInt(e.target.value) || 1)}
-                            min="5"
+                            value={height || ''} // Show an empty string if height is 0
+                            onChange={(e) => handleHeightChange(e.target.value)}
                         />
                     </label>
                     <label>
                         Tectonic Plates:
                         <input
                             type="number"
-                            value={plates}
-                            onChange={(e) => setPlates(parseInt(e.target.value) || 1)}
-                            min="1"
+                            value={plates || ''} // Show an empty string if plates is 0 or invalid
+                            onChange={(e) => handlePlatesChange(e.target.value)}
                         />
                     </label>
-                    <button onClick={handleGenerateMap}>Generate Map</button>
+                    <button 
+                        onClick={handleGenerateMap} 
+                        disabled={width <= 0 || height <= 0} // Disable button if dimensions are invalid
+                    >
+                        Generate Map
+                    </button>
                     <label>
                         Visualization:
                         <select
@@ -133,6 +152,7 @@ const App: React.FC = () => {
                             <option value="temperature">Temperature</option>
                             <option value="humidity">Humidity</option>
                             <option value="vegetation">Vegetation</option>
+                            <option value="habitability">Habitability</option>
                             <option value="plates">Tectonic Plates</option>
                         </select>
                     </label>
@@ -175,6 +195,10 @@ const App: React.FC = () => {
                                 <p>{calculateWorldStats(map).averageVegetation.toFixed(2)}</p>
                             </div>
                             <div className="info-item">
+                                <label>Average Habitability</label>
+                                <p>{calculateWorldStats(map).averageHabitability.toFixed(2)}</p>
+                            </div>
+                            <div className="info-item">
                                 <label>Ocean Coverage</label>
                                 <p>{calculateWorldStats(map).oceanCoverage.toFixed(2)}%</p>
                             </div>
@@ -189,6 +213,14 @@ const App: React.FC = () => {
                             <div className="info-item">
                                 <label>Volcanoes</label>
                                 <p>{calculateWorldStats(map).volcanoCount}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Villages</label>
+                                <p>{calculateWorldStats(map).villageCount}</p>
+                            </div>
+                            <div className="info-item">
+                                <label>Cities</label>
+                                <p>{calculateWorldStats(map).cityCount}</p>
                             </div>
                             <div className="info-item">
                                 <label>Top 3 Biomes</label>

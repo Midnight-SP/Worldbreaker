@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface HexGridProps {
-    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; features: string[]}[][];
+    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; habitability: number; features: string[]}[][];
     riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number }>;
     visualizationType: string;
     plates: number;
@@ -19,7 +19,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
         return [x, y];
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number }): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; habitability: number }): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);
@@ -35,6 +35,9 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                 return `rgb(${vegetationColor}, ${255 - vegetationColor}, 0)`;
             case 'plates':
                 return `hsl(${tile.plate * (360 / plates)}, 70%, 50%)`;
+            case 'habitability': // New visualization type
+                const habitabilityColor = Math.floor(tile.habitability * 255);
+                return `rgb(${255 - habitabilityColor}, ${habitabilityColor}, 0)`; // Red to green gradient
             case 'biomes':
             default:
                 return '';
@@ -58,6 +61,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                             Temperature: ${tile.temperature.toFixed(2)}
                             Humidity: ${tile.humidity.toFixed(2)}
                             Vegetation: ${tile.vegetation.toFixed(2)}
+                            Habitability: ${tile.habitability.toFixed(2)}
                             Latitude: ${tile.latitude.toFixed(2)}
                             Biome: ${tile.terrain}
                             ${showFeatures && tile.features.length > 0 ? `Features: ${tile.features.join(', ')}` : ''}
@@ -116,6 +120,28 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                                 {showFeatures && tile.features.includes('volcano') && (
                                     <image
                                         href="/icons/volcano-icon.svg"
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                                {showFeatures && tile.features.includes('village') && (
+                                    <image
+                                        href="/icons/village-icon.svg" // Replace with the path to your village icon
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                                {showFeatures && tile.features.includes('city') && (
+                                    <image
+                                        href="/icons/city-icon.svg" // Replace with the path to your city icon
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}

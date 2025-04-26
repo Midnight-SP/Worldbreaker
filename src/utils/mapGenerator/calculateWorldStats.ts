@@ -1,15 +1,26 @@
 import { oceanBiomes } from "./biomes";
 
-export const calculateWorldStats = (map: Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; features: string[] }>>) => {
+export const calculateWorldStats = (map: Array<Array<{ 
+    altitude: number; 
+    temperature: number; 
+    humidity: number; 
+    vegetation: number; 
+    terrain: string; 
+    features: string[]; 
+    habitability: number; // Add habitability property
+}>>) => {
     const totalTiles = map.length * map[0].length;
     let totalAltitude = 0;
     let totalTemperature = 0;
     let totalHumidity = 0;
     let totalVegetation = 0;
+    let totalHabitability = 0;
     let oceanTiles = 0;
     let sourceCount = 0;
     let lakeCount = 0;
     let volcanoCount = 0;
+    let villageCount = 0;
+    let cityCount = 0;
     const biomeCounts: Record<string, number> = {};
 
     map.forEach(row => {
@@ -18,6 +29,7 @@ export const calculateWorldStats = (map: Array<Array<{ altitude: number; tempera
             totalTemperature += tile.temperature;
             totalHumidity += tile.humidity;
             totalVegetation += tile.vegetation;
+            totalHabitability += tile.habitability;
 
             if (oceanBiomes.some(biome => biome.name === tile.terrain)) {
                 oceanTiles++;
@@ -35,6 +47,14 @@ export const calculateWorldStats = (map: Array<Array<{ altitude: number; tempera
                 volcanoCount++;
             }
 
+            if (tile.features.includes('village')) {
+                villageCount++;
+            }
+
+            if (tile.features.includes('city')) {
+                cityCount++;
+            }
+
             biomeCounts[tile.terrain] = (biomeCounts[tile.terrain] || 0) + 1;
         });
     });
@@ -43,6 +63,7 @@ export const calculateWorldStats = (map: Array<Array<{ altitude: number; tempera
     const averageTemperature = totalTemperature / totalTiles;
     const averageHumidity = totalHumidity / totalTiles;
     const averageVegetation = totalVegetation / totalTiles;
+    const averageHabitability = totalHabitability / totalTiles;
     const oceanCoverage = (oceanTiles / totalTiles) * 100;
 
     const sortedBiomes = Object.entries(biomeCounts)
@@ -58,10 +79,13 @@ export const calculateWorldStats = (map: Array<Array<{ altitude: number; tempera
         averageTemperature,
         averageHumidity,
         averageVegetation,
+        averageHabitability,
         oceanCoverage,
         sourceCount,
         lakeCount,
         volcanoCount,
+        villageCount,
+        cityCount,
         topBiomes: sortedBiomes,
     };
 };

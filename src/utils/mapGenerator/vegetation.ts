@@ -43,7 +43,7 @@ export function adjustVegetationBasedOnWater(
     }
 }
 
-function findNearestWaterDistance(
+export function findNearestWaterDistance(
     map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[]; terrain: string }>>,
     row: number,
     col: number,

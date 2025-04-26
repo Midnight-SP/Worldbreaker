@@ -102,9 +102,15 @@ export function distortPlateBoundaries(
             // Use noise to randomly shift plate assignments near boundaries
             if (Math.abs(noiseValue) > distortionThreshold) {
                 const neighbors = getNumericHexNeighbors(plateMap, row, col, height, width);
-                const neighborPlates = neighbors.map(
-                    (neighbor) => plateMap[neighbor.row][neighbor.col]
-                );
+                const neighborPlates = neighbors
+                    .filter(
+                        (neighbor) =>
+                            neighbor.row >= 0 &&
+                            neighbor.row < height &&
+                            neighbor.col >= 0 &&
+                            neighbor.col < width
+                    )
+                    .map((neighbor) => plateMap[neighbor.row][neighbor.col]);
 
                 // Randomly assign a neighboring plate with higher probability
                 if (neighborPlates.length > 0) {

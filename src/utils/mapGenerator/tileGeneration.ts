@@ -12,7 +12,8 @@ export function generateTile(
     detailNoise1: (x: number, y: number) => number,
     detailNoise2: (x: number, y: number) => number,
     temperatureNoise: (x: number, y: number) => number,
-    humidityNoise: (x: number, y: number) => number
+    humidityNoise: (x: number, y: number) => number,
+    findNearestWaterDistance: (row: number, col: number) => number | null // Add water distance function
 ): { 
     altitude: number; 
     temperature: number; 
@@ -21,7 +22,8 @@ export function generateTile(
     terrain: string; 
     latitude: number; 
     plate: number; 
-    features: string[];
+    features: string[]; 
+    habitability: number; // Add habitability
 } {
     const baseScale = 0.05; // Base scale for large landmasses
     const detailScale1 = 0.1; // Scale for finer details
@@ -67,6 +69,12 @@ export function generateTile(
 
     const terrain = determineTerrain(altitude, temperature, humidity);
 
+    // Calculate distance to nearest water
+    const distanceToWater = findNearestWaterDistance(rowIndex, colIndex);
+
+    // Calculate habitability
+    const habitability = calculateHabitability(altitude, temperature, humidity, distanceToWater, 0);
+
     return { 
         altitude, 
         temperature, 
@@ -75,7 +83,8 @@ export function generateTile(
         terrain, 
         latitude, 
         plate: closestPlate,
-        features: [] 
+        features: [],
+        habitability // Add habitability to the tile
     };
 }
 
@@ -90,7 +99,7 @@ export function findClosestPlate(
     let closestPlates: number[] = [];
 
     centers.forEach((center, index) => {
-        const dx = Math.min(Math.abs(center.x - x), width - Math.abs(center.x - x)); // Wrap horizontally
+        const dx = Math.abs(center.x - x); // No wrapping
         const dy = Math.abs(center.y - y);
         const distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -169,7 +178,7 @@ export function assignPlatesUsingVoronoi(
 
             for (let i = 0; i < plateCenters.length; i++) {
                 const center = plateCenters[i];
-                const dx = Math.min(Math.abs(center.x - col), width - Math.abs(center.x - col)); // Wrap horizontally
+                const dx = Math.abs(center.x - col); // No wrapping
                 const dy = Math.abs(center.y - row);
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -202,4 +211,37 @@ export function calculatePlateSizes(
     }
 
     return plateSizes;
+}
+
+export function calculateHabitability(
+    altitude: number,
+    temperature: number,
+    humidity: number,
+    distanceToWater: number | null,
+    vegetation: number // Add vegetation as a factor
+): number {
+    // Altitude factor: More habitable at moderate altitudes
+    const altitudeFactor = Math.max(0, 1 - Math.abs(altitude - 0.3));
+
+    // Temperature factor: More habitable at moderate temperatures
+    const temperatureFactor = Math.max(0, 1 - Math.abs(temperature - 0.5));
+
+    // Humidity factor: More habitable with moderate to high humidity
+    const humidityFactor = humidity;
+
+    // Water proximity factor: More habitable closer to water
+    const waterFactor = distanceToWater !== null ? Math.max(0, 1 - distanceToWater * 0.1) : 0;
+
+    // Vegetation factor: More habitable with moderate vegetation
+    const vegetationFactor = Math.max(0, 1 - Math.abs(vegetation - 0.5));
+
+    // Combine factors to calculate habitability
+    const habitability = 
+        (altitudeFactor * 0.3) + 
+        (temperatureFactor * 0.25) + 
+        (humidityFactor * 0.2) + 
+        (waterFactor * 0.1) + 
+        (vegetationFactor * 0.15);
+
+    return Math.min(1, Math.max(0, habitability)); // Clamp to [0, 1]
 }
