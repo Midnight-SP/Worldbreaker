@@ -1,16 +1,8 @@
 import { getHexNeighbors, getNumericHexNeighbors } from "./hexNeighbors";
 import { createNoise2D } from 'simplex-noise';
+import { Map } from './types';
 
-export function smoothMap(map: Array<Array<{
-    altitude: number; 
-    temperature: number; 
-    humidity: number; 
-    vegetation: number; 
-    terrain: string; 
-    latitude: number; 
-    plate: number; 
-    features: string[];
-}>>): void {
+export function smoothMap(map: Map): void {
     const height = map.length;
     const width = map[0].length;
 

@@ -3,10 +3,10 @@ import HexGrid from './components/HexGrid';
 import { generateMap } from './utils/mapGenerator';
 import './styles/App.css';
 import { calculateWorldStats } from './utils/mapGenerator/calculateWorldStats';
+import { Map } from './utils/mapGenerator/types';
 
 const App: React.FC = () => {
-    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; habitability: number; terrain: string; climateZone: string; latitude: number; plate: number; features: string[]}>> | null>(null);
-    const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number]; width: number }>>([]);
+    const [map, setMap] = useState<Map | null>(null);
     const [width, setWidth] = useState<number>(100);
     const [height, setHeight] = useState<number>(80);
     const [plates, setPlates] = useState<number>(7);
@@ -26,10 +26,11 @@ const App: React.FC = () => {
             return; // Do not generate a new map
         }
     
-        const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
-        console.log('Generated map with new latitude mode:', latitudeMode);
-        setMap(newMap);
-        setRiverPaths(newRiverPaths);
+        (async () => {
+            const { map: newMap } = await generateMap(width, height, plates, latitudeMode);
+            console.log('Generated map with new latitude mode:', latitudeMode);
+            setMap(newMap);
+        })();
     }, [latitudeMode, width, height, plates]);
 
     useEffect(() => {
@@ -52,16 +53,15 @@ const App: React.FC = () => {
         };
     }, []);
 
-    const handleGenerateMap = () => {
+    const handleGenerateMap = async () => {
         if (width <= 0 || height <= 0 || plates <= 0) {
             console.warn('Width, height, and plate count must be greater than 0.');
             return; // Do not generate a new map
         }
     
         try {
-            const { map: newMap, riverPaths: newRiverPaths } = generateMap(width, height, plates, latitudeMode);
+            const { map: newMap } = await generateMap(width, height, plates, latitudeMode);
             setMap(newMap);
-            setRiverPaths(newRiverPaths);
         } catch (error) {
             console.error('Failed to generate map:', error);
         }
@@ -249,11 +249,10 @@ const App: React.FC = () => {
                 {map && (
                     <HexGrid
                         map={map}
-                        riverPaths={showFeatures ? riverPaths : []} // Conditionally pass river paths
                         visualizationType={visualizationType}
                         plates={plates}
                         setTooltip={setTooltip}
-                        showFeatures={showFeatures} // Pass the new prop
+                        showFeatures={showFeatures}
                     />
                 )}
             </div>

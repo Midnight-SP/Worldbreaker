@@ -1,14 +1,7 @@
 import { oceanBiomes } from "./biomes";
+import { Map } from "./types";
 
-export const calculateWorldStats = (map: Array<Array<{ 
-    altitude: number; 
-    temperature: number; 
-    humidity: number; 
-    vegetation: number; 
-    terrain: string; 
-    features: string[]; 
-    habitability: number; // Add habitability property
-}>>) => {
+export const calculateWorldStats = (map: Map) => {
     const totalTiles = map.length * map[0].length;
     let totalAltitude = 0;
     let totalTemperature = 0;

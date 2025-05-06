@@ -1,24 +1,17 @@
-import { getHexNeighbors } from "./hexNeighbors";
+import { Map } from './types';
+import { getHexNeighbors } from './hexNeighbors';
 
-export function adjustVegetationBasedOnWater(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; features: string[]; terrain: string }>>,
-    height: number,
-    width: number
-): void {
+export function adjustVegetationBasedOnWater(map: Map, height: number, width: number): void {
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
-
-            // Find the distance to the nearest water source
             const nearestWaterDistance = findNearestWaterDistance(map, row, col, height, width);
 
-            // Adjust vegetation based on proximity to water
             if (nearestWaterDistance !== null) {
-                // Reduce the base increase for vegetation near water
-                const baseIncrease = Math.max(0, 0.2 - nearestWaterDistance * 0.03); // Lower base increase
-                const randomFactor = Math.random() * 0.04 - 0.02; // Random variation in the range [-0.02, 0.02]
+                const baseIncrease = Math.max(0, 0.2 - nearestWaterDistance * 0.03);
+                const randomFactor = Math.random() * 0.04 - 0.02;
                 const vegetationIncrease = Math.max(0, baseIncrease + randomFactor);
-                tile.vegetation = Math.min(tile.vegetation + vegetationIncrease, 1); // Clamp to [0, 1]
+                tile.vegetation = Math.min(tile.vegetation + vegetationIncrease, 1);
             } else {
                 // Increase the decrease for tiles far from water
                 const randomFactor = Math.random() * 0.04 - 0.02; // Random variation in the range [-0.02, 0.02]
@@ -44,7 +37,7 @@ export function adjustVegetationBasedOnWater(
 }
 
 export function findNearestWaterDistance(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[]; terrain: string }>>,
+    map: Map,
     row: number,
     col: number,
     height: number,
@@ -54,28 +47,20 @@ export function findNearestWaterDistance(
     const queue: Array<{ row: number; col: number; distance: number }> = [{ row, col, distance: 0 }];
 
     while (queue.length > 0) {
-        const current = queue.shift(); // Get the next item from the queue
-        if (!current) continue; // Skip if the queue is empty
+        const current = queue.shift();
+        if (!current) continue;
 
-        const { row: currentRow, col: currentCol, distance } = current; // Safely destructure
+        const { row: currentRow, col: currentCol, distance } = current;
         const key = `${currentRow},${currentCol}`;
 
         if (visited.has(key)) continue;
         visited.add(key);
 
         const tile = map[currentRow][currentCol];
-
-        // Check if the current tile is a water source
-        if (
-            tile.features.includes('lake') ||
-            tile.features.includes('river') ||
-            tile.features.includes('source') ||
-            isShoreline(map, currentRow, currentCol, height, width)
-        ) {
-            return distance; // Return the distance to the nearest water source
+        if (tile.features.includes('lake') || tile.features.includes('river') || tile.features.includes('source') || isShoreline(map, currentRow, currentCol, height, width)) {
+            return distance;
         }
 
-        // Add neighbors to the queue
         const neighbors = getHexNeighbors(map, currentRow, currentCol, height, width);
         for (const neighbor of neighbors) {
             queue.push({ row: neighbor.row, col: neighbor.col, distance: distance + 1 });
@@ -86,7 +71,7 @@ export function findNearestWaterDistance(
 }
 
 function isShoreline(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[]; terrain: string }>>,
+    map: Map,
     row: number,
     col: number,
     height: number,

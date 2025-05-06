@@ -1,5 +1,6 @@
 import { determineTerrain } from './terrain';
 import { getHexNeighbors } from './hexNeighbors';
+import { Map } from './types';
 
 export function generateTile(
     rowIndex: number,
@@ -86,7 +87,7 @@ export function generateTile(
         latitude, 
         plate: closestPlate,
         features: [],
-        habitability // Add habitability to the tile
+        habitability
     };
 }
 
@@ -117,7 +118,7 @@ export function findClosestPlate(
 }
 
 export function identifyPlateBoundaries(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; plate: number; features: string[] }>>,
+    map: Map,
     height: number,
     width: number,
     plateCenters: Array<{ x: number; y: number; drift: { dx: number; dy: number } }>

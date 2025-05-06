@@ -1,28 +1,27 @@
 import { driftDirections } from './driftDirections';
 import { determineClimateZone, determineTerrain } from './terrain';
 import { applyPlateBoundaryEffects, smoothMap, distortPlateBoundaries } from './smoothing';
-import { generateTile, identifyPlateBoundaries, assignPlatesUsingVoronoi, calculatePlateSizes, calculateHabitability } from './tileGeneration';
+import { identifyPlateBoundaries, assignPlatesUsingVoronoi, calculatePlateSizes, calculateHabitability } from './tileGeneration';
 import { generateRivers } from './rivers';
 import { applyRainShadowEffect } from './rainShadowEffect';
 import { getHexNeighbors } from './hexNeighbors';
-import { climateZones, oceanBiomes } from './biomes';
+import { oceanBiomes } from './biomes';
 import { applyFeatureEffects } from './applyFeatureEffects';
 import { adjustVegetationBasedOnWater, findNearestWaterDistance } from './vegetation';
-import { createNoise2D } from 'simplex-noise';
+import seedrandom from 'seedrandom';
+import { Map } from './types';
 
 
-export function generateMap(width: number, height: number, plates: number, latitudeMode: 'full' | 'partial') {
-    // Validation: Ensure width and height are valid
-    if (!width || !height || width < 1 || height < 1) {
-        throw new Error('Invalid map dimensions. Width and height must be greater than 0.');
-    }
+export async function generateMap(width: number, height: number, plates: number, latitudeMode: 'full' | 'partial') {
+    // Generate a new random seed for each map
+    const randomSeed = Math.random().toString();
 
-    const baseNoise = createNoise2D();
-    const detailNoise1 = createNoise2D();
-    const detailNoise2 = createNoise2D();
-    const temperatureNoise = createNoise2D();
-    const humidityNoise = createNoise2D();
-
+    // Use the random seed to generate seeds for different noise functions
+    const baseSeed = seedrandom(randomSeed + 'base')();
+    const detailSeed1 = seedrandom(randomSeed + 'detail1')();
+    const detailSeed2 = seedrandom(randomSeed + 'detail2')();
+    const temperatureSeed = seedrandom(randomSeed + 'temperature')();
+    const humiditySeed = seedrandom(randomSeed + 'humidity')();
 
     // Generate and distort the plate map
     let plateMap = assignPlatesUsingVoronoi(width, height, plates);
@@ -37,38 +36,63 @@ export function generateMap(width: number, height: number, plates: number, latit
     // Calculate plate sizes
     const plateSizes = calculatePlateSizes(plateMap, plates);
 
-    // Generate the map tiles
-    type Tile = {
-        altitude: number;
-        plate: number;
-        features: string[];
-        terrain: string;
-        temperature: number;
-        humidity: number;
-        vegetation: number;
-        latitude: number;
-        habitability: number;
-        climateZone: string;
-    };
+    // Divide the map into chunks for parallel processing
+    const chunks: Array<{ rowIndex: number; colIndex: number }[]> = [];
+    for (let rowIndex = 0; rowIndex < height; rowIndex++) {
+        const chunk = [];
+        for (let colIndex = 0; colIndex < width; colIndex++) {
+            chunk.push({ rowIndex, colIndex });
+        }
+        chunks.push(chunk);
+    }
 
-    const map: Tile[][] = Array.from({ length: height }, (_, rowIndex) =>
-        Array(width).fill(null).map((_, colIndex) => {
-            return generateTile(
-                rowIndex,
-                colIndex,
+    // Create workers and process chunks
+    const workers = chunks.map((chunk) => {
+        return new Promise((resolve, reject) => {
+            const worker = new Worker(new URL('./tileWorker.js', import.meta.url));
+            worker.onmessage = (event) => {
+                resolve(event.data);
+                worker.terminate();
+            };
+            worker.onerror = (error) => {
+                reject(error);
+                worker.terminate();
+            };
+            worker.postMessage({
+                chunk,
                 height,
                 width,
                 plateCenters,
                 latitudeMode,
-                baseNoise,
-                detailNoise1,
-                detailNoise2,
-                temperatureNoise,
-                humidityNoise,
-                () => null // Placeholder for distanceToWater
-            );
-        })
-    );
+                seeds: {
+                    baseSeed,
+                    detailSeed1,
+                    detailSeed2,
+                    temperatureSeed,
+                    humiditySeed,
+                },
+            });
+        });
+    });
+
+    // Wait for all workers to complete
+    const results = await Promise.all(workers);
+
+    // Combine results into a single map
+    const map: Map = Array.from({ length: height }, () => Array(width).fill(null));
+    results.forEach((result: any) => {
+        result.forEach(({ rowIndex, colIndex, tile }: any) => {
+            map[rowIndex][colIndex] = tile;
+        });
+    });
+
+    // Perform post-processing (e.g., neighbors, features, smoothing)
+    const neighborsCache: Record<string, Array<{ row: number; col: number }>> = {};
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            neighborsCache[`${row},${col}`] = getHexNeighbors(map, row, col, height, width);
+        }
+    }
     
     // Calculate distanceToWater and habitability after map initialization
     for (let row = 0; row < height; row++) {
@@ -120,7 +144,7 @@ export function generateMap(width: number, height: number, plates: number, latit
         const row = Math.floor(Math.random() * height);
         const col = Math.floor(Math.random() * width);
     
-        const neighbors = getHexNeighbors(map, row, col, height, width);
+        const neighbors = neighborsCache[`${row},${col}`];
     
         if (
             !map[row][col].features.includes('source') &&
@@ -162,7 +186,7 @@ export function generateMap(width: number, height: number, plates: number, latit
             const tile = map[row][col];
     
             if (tile.features.includes('source')) {
-                const neighbors = getHexNeighbors(map, row, col, height, width);
+                const neighbors = neighborsCache[`${row},${col}`];
     
                 // Check if none of the neighbors have a river
                 const hasNeighboringRiver = neighbors.some(
@@ -183,7 +207,7 @@ export function generateMap(width: number, height: number, plates: number, latit
             const tile = map[row][col];
     
             if (tile.features.includes('river')) {
-                const neighbors = getHexNeighbors(map, row, col, height, width);
+                const neighbors = neighborsCache[`${row},${col}`];
     
                 // Check if the tile doesn't neighbor an ocean biome and has exactly one neighboring river or source
                 const hasNeighboringRiverOrSource = neighbors.filter(
@@ -229,30 +253,25 @@ export function generateMap(width: number, height: number, plates: number, latit
 
     // Generate villages based on habitability
     let assignedVillages = 0;
-
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
-
-            // Skip tiles with altitude <= 0 or already containing a village
             if (tile.altitude <= 0 || tile.features.includes('village')) continue;
-
-            // Check if any tiles within a two-tile range already have a village
-            const neighbors = getHexNeighbors(map, row, col, height, width);
+    
+            const neighbors = neighborsCache[`${row},${col}`];
             const hasNeighboringVillage = neighbors.some(
-                (neighbor) => map[neighbor.row][neighbor.col].features.includes('village')
+                neighbor => map[neighbor.row][neighbor.col].features.includes('village')
             );
-
-            // Check neighbors of neighbors (two-tile range)
-            const hasVillageInTwoTileRange = neighbors.some((neighbor) => {
-                const secondLevelNeighbors = getHexNeighbors(map, neighbor.row, neighbor.col, height, width);
+    
+            const hasVillageInTwoTileRange = neighbors.some(neighbor => {
+                const secondLevelNeighbors = neighborsCache[`${neighbor.row},${neighbor.col}`];
                 return secondLevelNeighbors.some(
-                    (secondNeighbor) => map[secondNeighbor.row][secondNeighbor.col].features.includes('village')
+                    secondNeighbor => map[secondNeighbor.row][secondNeighbor.col].features.includes('village')
                 );
             });
-
-            if (!hasNeighboringVillage && !hasVillageInTwoTileRange && tile.habitability > 0.75) { // Threshold for habitability
-                if (Math.random() < 0.5) { // Random chance to assign a village
+    
+            if (!hasNeighboringVillage && !hasVillageInTwoTileRange && tile.habitability > 0.75) {
+                if (Math.random() < 0.5) {
                     tile.features.push('village');
                     assignedVillages++;
                 }
@@ -279,5 +298,5 @@ export function generateMap(width: number, height: number, plates: number, latit
 
     console.log(`Converted ${convertedCities} villages into cities.`);
 
-    return { map, riverPaths }; // Return both map and riverPaths
+    return { map }; // Return both map and riverPaths
 }

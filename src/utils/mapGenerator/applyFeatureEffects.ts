@@ -1,46 +1,33 @@
-import { getHexNeighbors } from "./hexNeighbors";
+import { Map } from './types';
+import { getHexNeighbors } from './hexNeighbors';
 
-export function applyFeatureEffects(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[] }>>,
-    height: number,
-    width: number
-): void {
+export function applyFeatureEffects(map: Map, height: number, width: number): void {
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
 
             // Apply effects based on features
             if (tile.features.includes('volcano')) {
-                // Volcanoes increase temperature in the surrounding area
-                applyEffectToNeighbors(map, row, col, height, width, {
-                    temperature: 0.1, // Reduced temperature increase
-                });
+                applyEffectToNeighbors(map, row, col, height, width, { temperature: 0.1 });
             }
 
             if (tile.features.includes('lake')) {
-                // Lakes increase humidity in the surrounding area
-                applyEffectToNeighbors(map, row, col, height, width, {
-                    humidity: 0.15, // Reduced humidity increase
-                });
+                applyEffectToNeighbors(map, row, col, height, width, { humidity: 0.15 });
             }
 
             if (tile.features.includes('river')) {
-                // Rivers slightly increase humidity in the surrounding area
-                applyEffectToNeighbors(map, row, col, height, width, {
-                    humidity: 0.05, // Slightly reduced humidity increase
-                });
+                applyEffectToNeighbors(map, row, col, height, width, { humidity: 0.05 });
             }
 
             if (tile.features.includes('source')) {
-                // Sources slightly increase humidity locally
-                tile.humidity = Math.min(tile.humidity + 0.1, 1); // Reduced local humidity increase
+                tile.humidity = Math.min(tile.humidity + 0.1, 1);
             }
         }
     }
 }
 
 function applyEffectToNeighbors(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[] }>>,
+    map: Map,
     row: number,
     col: number,
     height: number,
@@ -53,11 +40,11 @@ function applyEffectToNeighbors(
         const neighborTile = map[neighbor.row][neighbor.col];
 
         if (effects.temperature !== undefined) {
-            neighborTile.temperature = Math.min(neighborTile.temperature + effects.temperature, 1); // Clamp to [0, 1]
+            neighborTile.temperature = Math.min(neighborTile.temperature + effects.temperature, 1);
         }
 
         if (effects.humidity !== undefined) {
-            neighborTile.humidity = Math.min(neighborTile.humidity + effects.humidity, 1); // Clamp to [0, 1]
+            neighborTile.humidity = Math.min(neighborTile.humidity + effects.humidity, 1);
         }
     }
 }

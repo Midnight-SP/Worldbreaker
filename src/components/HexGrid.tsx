@@ -1,12 +1,12 @@
 import React from 'react';
+import { Tile, Map } from '../utils/mapGenerator/types';
 
 interface HexGridProps {
-    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; climateZone: string; latitude: number; plate: number; habitability: number; features: string[]}[][];
-    riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number }>;
+    map: Map;
     visualizationType: string;
     plates: number;
     setTooltip: React.Dispatch<React.SetStateAction<string | null>>;
-    showFeatures: boolean; // New prop for toggling features
+    showFeatures: boolean;
 }
 
 const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTooltip, showFeatures }) => {
@@ -19,7 +19,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
         return [x, y];
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; habitability: number; climateZone: string }): string => {
+    const getFillColor = (tile: Tile): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);

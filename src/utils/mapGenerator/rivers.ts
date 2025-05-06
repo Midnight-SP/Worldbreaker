@@ -1,8 +1,9 @@
 import { oceanBiomes } from './biomes';
 import { getHexNeighbors } from './hexNeighbors';
+import { Map } from './types';
 
 export function generateRivers(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[]; riverWidth?: number; terrain: string }>>,
+    map: Map,
     riverCount: number
 ): Array<{ start: [number, number]; end: [number, number]; width: number }> {
     const height = map.length;
@@ -66,7 +67,6 @@ export function generateRivers(
             }
 
             map[row][col].features.push('river'); // Mark the tile as having a river
-            map[row][col].riverWidth = (map[row][col].riverWidth || 0) + currentWidth; // Add to river width
 
             // Find the lowest neighboring tile using hexagonal neighbors
             const neighbors = getHexNeighbors(map, row, col, height, width);

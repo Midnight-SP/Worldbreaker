@@ -1,5 +1,7 @@
+import { Map } from "./types";
+
 export function getHexNeighbors(
-    map: Array<Array<{ altitude: number; temperature: number; humidity: number; features: string[] }>>,
+    map: Map,
     row: number,
     col: number,
     height: number,
