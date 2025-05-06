@@ -5,7 +5,7 @@ import './styles/App.css';
 import { calculateWorldStats } from './utils/mapGenerator/calculateWorldStats';
 
 const App: React.FC = () => {
-    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; habitability: number; terrain: string; latitude: number; plate: number; features: string[]}>> | null>(null);
+    const [map, setMap] = useState<Array<Array<{ altitude: number; temperature: number; humidity: number; vegetation: number; habitability: number; terrain: string; climateZone: string; latitude: number; plate: number; features: string[]}>> | null>(null);
     const [riverPaths, setRiverPaths] = useState<Array<{ start: [number, number]; end: [number, number]; width: number }>>([]);
     const [width, setWidth] = useState<number>(100);
     const [height, setHeight] = useState<number>(80);
@@ -148,6 +148,7 @@ const App: React.FC = () => {
                             onChange={(e) => setVisualizationType(e.target.value)}
                         >
                             <option value="biomes">Biomes</option>
+                            <option value="climate">Climate Zones</option>
                             <option value="altitude">Altitude</option>
                             <option value="temperature">Temperature</option>
                             <option value="humidity">Humidity</option>

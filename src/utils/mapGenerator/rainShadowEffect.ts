@@ -12,30 +12,50 @@ export function applyRainShadowEffect(
             const windDirection = getWindDirection(tile.latitude);
 
             if (tile.altitude > 0.6) { // High altitude (mountains)
-                const shadowRow = row + windDirection.dy;
-                const shadowCol = col + windDirection.dx; // No wrapping
+                let shadowRow = row;
+                let shadowCol = col;
 
-                if (shadowRow >= 0 && shadowRow < height && shadowCol >= 0 && shadowCol < width) {
-                    map[shadowRow][shadowCol].humidity *= 0.5; // Reduce humidity in the rain shadow
+                // Extend the rain shadow effect for multiple tiles downwind
+                for (let distance = 1; distance <= 5; distance++) { // Extend up to 5 tiles
+                    shadowRow += windDirection.dy;
+                    shadowCol += windDirection.dx;
+
+                    // Ensure the shadow tile is within bounds
+                    if (shadowRow < 0 || shadowRow >= height || shadowCol < 0 || shadowCol >= width) {
+                        break;
+                    }
+
+                    const shadowTile = map[shadowRow][shadowCol];
+
+                    // Reduce humidity based on distance and mountain altitude
+                    const distanceFactor = 1 - distance * 0.2; // Humidity reduction decreases with distance
+                    const altitudeFactor = Math.min(1, tile.altitude); // Higher mountains have a stronger effect
+                    shadowTile.humidity *= Math.max(0, 1 - 0.5 * altitudeFactor * distanceFactor);
                 }
             }
         }
     }
 }
 
-// Determine wind direction based on latitude
+// Determine wind direction based on latitude and global wind patterns
 function getWindDirection(latitude: number): { dx: number; dy: number } {
-    if (latitude > 0.3) {
-        // Northern tropics: Winds blow southward
-        return { dx: 0, dy: -1 };
+    if (latitude > 0.6) {
+        // Polar easterlies: Winds blow southwest in the northern hemisphere
+        return { dx: -1, dy: 1 };
+    } else if (latitude > 0.3) {
+        // Westerlies: Winds blow northeast in the northern hemisphere
+        return { dx: 1, dy: -1 };
     } else if (latitude > 0) {
-        // Northern hemisphere: Winds blow northward
-        return { dx: 0, dy: 1 };
+        // Trade winds: Winds blow southwest in the northern tropics
+        return { dx: -1, dy: 1 };
     } else if (latitude > -0.3) {
-        // Southern hemisphere: Winds blow southward
-        return { dx: 0, dy: -1 };
+        // Trade winds: Winds blow northwest in the southern tropics
+        return { dx: 1, dy: -1 };
+    } else if (latitude > -0.6) {
+        // Westerlies: Winds blow southeast in the southern hemisphere
+        return { dx: -1, dy: 1 };
     } else {
-        // Southern tropics: Winds blow northward
-        return { dx: 0, dy: 1 };
+        // Polar easterlies: Winds blow northwest in the southern hemisphere
+        return { dx: 1, dy: -1 };
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface HexGridProps {
-    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; habitability: number; features: string[]}[][];
+    map: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; climateZone: string; latitude: number; plate: number; habitability: number; features: string[]}[][];
     riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number }>;
     visualizationType: string;
     plates: number;
@@ -19,7 +19,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
         return [x, y];
     };
 
-    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; habitability: number }): string => {
+    const getFillColor = (tile: { altitude: number; temperature: number; humidity: number; vegetation: number; terrain: string; latitude: number; plate: number; habitability: number; climateZone: string }): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);
@@ -35,9 +35,23 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                 return `rgb(${vegetationColor}, ${255 - vegetationColor}, 0)`;
             case 'plates':
                 return `hsl(${tile.plate * (360 / plates)}, 70%, 50%)`;
-            case 'habitability': // New visualization type
+            case 'habitability':
                 const habitabilityColor = Math.floor(tile.habitability * 255);
                 return `rgb(${255 - habitabilityColor}, ${habitabilityColor}, 0)`; // Red to green gradient
+            case 'climate':
+                const climateColors: Record<string, string> = {
+                    equatorial: '#228B22', // Forest green
+                    'tropical monsoon': '#32CD32', // Lime green
+                    'tropical dry': '#FFD700', // Gold
+                    mediterranean: '#F4A460', // Sandy brown
+                    'sub-tropical dry': '#D2B48C', // Tan
+                    'temperate maritime': '#87CEEB', // Sky blue
+                    'temperate continental': '#4682B4', // Steel blue
+                    'sub-polar': '#ADD8E6', // Light blue
+                    polar: '#FFFFFF', // White
+                    unknown: '#808080', // Gray
+                };
+                return climateColors[tile.climateZone] || '#808080'; // Default to gray
             case 'biomes':
             default:
                 return '';
@@ -64,6 +78,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                             Habitability: ${tile.habitability.toFixed(2)}
                             Latitude: ${tile.latitude.toFixed(2)}
                             Biome: ${tile.terrain}
+                            Climate Zone: ${tile.climateZone}
                             ${showFeatures && tile.features.length > 0 ? `Features: ${tile.features.join(', ')}` : ''}
                         `.trim();
 

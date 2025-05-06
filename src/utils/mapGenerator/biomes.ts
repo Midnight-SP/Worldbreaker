@@ -1,3 +1,15 @@
+export const climateZones = [
+    { name: 'equatorial', latitude: 0, temperature: 0.8, humidity: 0.8 },
+    { name: 'tropical monsoon', latitude: 0.2, temperature: 0.7, humidity: 0.7 },
+    { name: 'tropical dry', latitude: 0.2, temperature: 0.7, humidity: 0.6 },
+    { name: 'mediterranean', latitude: 0.4, temperature: 0.5, humidity: 0.6 },
+    { name: 'sub-tropical dry', latitude: 0.4, temperature: 0.6, humidity: 0.4 },
+    { name: 'temperate maritime', latitude: 0.6, temperature: 0.4, humidity: 0.5 },
+    { name: 'temperate continental', latitude: 0.6, temperature: 0.3, humidity: 0.5 },
+    { name: 'sub-polar', latitude: 0.8, temperature: 0.3, humidity: 0.4 },
+    { name: 'polar', latitude: 1, temperature: 0.2, humidity: 0.4 },
+];
+
 export const oceanBiomes = [
     { name: 'abyss', altitude: -1, temperature: 0.3, humidity: 0.9, vegetation: 0 },
     { name: 'deep-ocean', altitude: -0.8, temperature: 0.4, humidity: 0.8, vegetation: 0.1 },

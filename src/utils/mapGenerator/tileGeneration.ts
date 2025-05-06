@@ -13,17 +13,18 @@ export function generateTile(
     detailNoise2: (x: number, y: number) => number,
     temperatureNoise: (x: number, y: number) => number,
     humidityNoise: (x: number, y: number) => number,
-    findNearestWaterDistance: (row: number, col: number) => number | null // Add water distance function
+    findNearestWaterDistance: (row: number, col: number) => number | null
 ): { 
     altitude: number; 
     temperature: number; 
     humidity: number; 
     vegetation: number; 
     terrain: string; 
+    climateZone: string;
     latitude: number; 
     plate: number; 
     features: string[]; 
-    habitability: number; // Add habitability
+    habitability: number;
 } {
     const baseScale = 0.05; // Base scale for large landmasses
     const detailScale1 = 0.1; // Scale for finer details
@@ -81,6 +82,7 @@ export function generateTile(
         humidity, 
         vegetation: 0, 
         terrain, 
+        climateZone: 'unknown',
         latitude, 
         plate: closestPlate,
         features: [],

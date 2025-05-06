@@ -1,11 +1,11 @@
 import { driftDirections } from './driftDirections';
-import { determineTerrain } from './terrain';
+import { determineClimateZone, determineTerrain } from './terrain';
 import { applyPlateBoundaryEffects, smoothMap, distortPlateBoundaries } from './smoothing';
 import { generateTile, identifyPlateBoundaries, assignPlatesUsingVoronoi, calculatePlateSizes, calculateHabitability } from './tileGeneration';
 import { generateRivers } from './rivers';
 import { applyRainShadowEffect } from './rainShadowEffect';
 import { getHexNeighbors } from './hexNeighbors';
-import { oceanBiomes } from './biomes';
+import { climateZones, oceanBiomes } from './biomes';
 import { applyFeatureEffects } from './applyFeatureEffects';
 import { adjustVegetationBasedOnWater, findNearestWaterDistance } from './vegetation';
 import { createNoise2D } from 'simplex-noise';
@@ -48,6 +48,7 @@ export function generateMap(width: number, height: number, plates: number, latit
         vegetation: number;
         latitude: number;
         habitability: number;
+        climateZone: string;
     };
 
     const map: Tile[][] = Array.from({ length: height }, (_, rowIndex) =>
@@ -216,6 +217,13 @@ export function generateMap(width: number, height: number, plates: number, latit
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
             tile.terrain = determineTerrain(tile.altitude, tile.temperature, tile.humidity);
+        }
+    }
+
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            const tile = map[row][col];
+            tile.climateZone = determineClimateZone(tile.latitude, tile.temperature, tile.humidity);
         }
     }
 
