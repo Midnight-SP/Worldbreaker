@@ -12,6 +12,9 @@ self.onmessage = (event) => {
     const temperatureNoise = createNoise2D(seedrandom(seeds.temperatureSeed));
     const humidityNoise = createNoise2D(seedrandom(seeds.humiditySeed));
 
+    // Add a seeded RNG for tile generation randomness
+    const tileRng = seedrandom(seeds.baseSeed + 'tiles');
+
     const result = chunk.map(({ rowIndex, colIndex }) => ({
         rowIndex,
         colIndex,
@@ -27,7 +30,8 @@ self.onmessage = (event) => {
             detailNoise2,
             temperatureNoise,
             humidityNoise,
-            () => null // Placeholder for distanceToWater
+            () => null, // Placeholder for distanceToWater
+            tileRng // This needs to match the updated generateTile function
         ),
     }));
 

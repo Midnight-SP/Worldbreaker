@@ -1,4 +1,4 @@
-import { oceanBiomes } from "./biomes";
+import { oceanBiomes, landBiomes } from "./biomes";
 import { Map } from "./types";
 
 export const calculateWorldStats = (map: Map) => {
@@ -14,7 +14,8 @@ export const calculateWorldStats = (map: Map) => {
     let volcanoCount = 0;
     let villageCount = 0;
     let cityCount = 0;
-    const biomeCounts: Record<string, number> = {};
+    const landBiomeCounts: Record<string, number> = {};
+    const oceanBiomeCounts: Record<string, number> = {};
 
     map.forEach(row => {
         row.forEach(tile => {
@@ -24,8 +25,13 @@ export const calculateWorldStats = (map: Map) => {
             totalVegetation += tile.vegetation;
             totalHabitability += tile.habitability;
 
-            if (oceanBiomes.some(biome => biome.name === tile.terrain)) {
+            // Check if tile is ocean
+            const isOceanTile = oceanBiomes.some(biome => biome.name === tile.terrain);
+            if (isOceanTile) {
                 oceanTiles++;
+                oceanBiomeCounts[tile.terrain] = (oceanBiomeCounts[tile.terrain] || 0) + 1;
+            } else {
+                landBiomeCounts[tile.terrain] = (landBiomeCounts[tile.terrain] || 0) + 1;
             }
 
             if (tile.features.includes('source')) {
@@ -47,8 +53,6 @@ export const calculateWorldStats = (map: Map) => {
             if (tile.features.includes('city')) {
                 cityCount++;
             }
-
-            biomeCounts[tile.terrain] = (biomeCounts[tile.terrain] || 0) + 1;
         });
     });
 
@@ -59,12 +63,22 @@ export const calculateWorldStats = (map: Map) => {
     const averageHabitability = totalHabitability / totalTiles;
     const oceanCoverage = (oceanTiles / totalTiles) * 100;
 
-    const sortedBiomes = Object.entries(biomeCounts)
+    // Get top 3 land biomes
+    const topLandBiomes = Object.entries(landBiomeCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([biome, count]) => ({
             biome,
-            percentage: ((count / totalTiles) * 100).toFixed(2), // Calculate percentage
+            percentage: ((count / totalTiles) * 100).toFixed(1),
+        }));
+
+    // Get top 3 ocean biomes
+    const topOceanBiomes = Object.entries(oceanBiomeCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([biome, count]) => ({
+            biome,
+            percentage: ((count / totalTiles) * 100).toFixed(1),
         }));
 
     return {
@@ -79,6 +93,7 @@ export const calculateWorldStats = (map: Map) => {
         volcanoCount,
         villageCount,
         cityCount,
-        topBiomes: sortedBiomes,
+        topLandBiomes,
+        topOceanBiomes,
     };
 };

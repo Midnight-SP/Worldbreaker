@@ -1,7 +1,7 @@
 import { Map } from './types';
 import { getHexNeighbors } from './hexNeighbors';
 
-export function adjustVegetationBasedOnWater(map: Map, height: number, width: number): void {
+export function adjustVegetationBasedOnWater(map: Map, height: number, width: number, rng: () => number): void {
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
@@ -9,14 +9,13 @@ export function adjustVegetationBasedOnWater(map: Map, height: number, width: nu
 
             if (nearestWaterDistance !== null) {
                 const baseIncrease = Math.max(0, 0.2 - nearestWaterDistance * 0.03);
-                const randomFactor = Math.random() * 0.04 - 0.02;
+                const randomFactor = rng() * 0.04 - 0.02; // Use seeded RNG
                 const vegetationIncrease = Math.max(0, baseIncrease + randomFactor);
                 tile.vegetation = Math.min(tile.vegetation + vegetationIncrease, 1);
             } else {
-                // Increase the decrease for tiles far from water
-                const randomFactor = Math.random() * 0.04 - 0.02; // Random variation in the range [-0.02, 0.02]
-                const vegetationDecrease = 0.3 + randomFactor; // Higher decrease
-                tile.vegetation = Math.max(tile.vegetation - vegetationDecrease, 0); // Clamp to [0, 1]
+                const randomFactor = rng() * 0.04 - 0.02; // Use seeded RNG
+                const vegetationDecrease = 0.3 + randomFactor;
+                tile.vegetation = Math.max(tile.vegetation - vegetationDecrease, 0);
             }
 
             // Factor in altitude, temperature, and humidity for natural variation
@@ -31,7 +30,7 @@ export function adjustVegetationBasedOnWater(map: Map, height: number, width: nu
             );
 
             // Add a small random variation to ensure diversity
-            tile.vegetation = Math.max(0, Math.min(tile.vegetation + (Math.random() * 0.03 - 0.015), 1));
+            tile.vegetation = Math.max(0, Math.min(tile.vegetation + (rng() * 0.03 - 0.015), 1));
         }
     }
 }

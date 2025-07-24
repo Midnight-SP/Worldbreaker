@@ -14,7 +14,8 @@ export function generateTile(
     detailNoise2: (x: number, y: number) => number,
     temperatureNoise: (x: number, y: number) => number,
     humidityNoise: (x: number, y: number) => number,
-    findNearestWaterDistance: (row: number, col: number) => number | null
+    findNearestWaterDistance: (row: number, col: number) => number | null,
+    rng: () => number
 ): { 
     altitude: number; 
     temperature: number; 
@@ -48,7 +49,7 @@ export function generateTile(
     const latitude = baseLatitude - latitudeOffset;
 
     // Find the closest plate and apply tectonic effects
-    const closestPlate = findClosestPlate(colIndex, rowIndex, plateCenters, totalCols);
+    const closestPlate = findClosestPlate(colIndex, rowIndex, plateCenters, totalCols, rng);
     const plateEffect = (closestPlate % 2 === 0 ? 0.2 : -0.2) * combinedNoiseValue; // Simulate plate uplift or subsidence
 
     // Combine noise and plate effects to calculate altitude
@@ -96,13 +97,14 @@ export function findClosestPlate(
     x: number,
     y: number,
     centers: Array<{ x: number; y: number }>,
-    width: number
+    width: number,
+    rng: () => number
 ): number {
     let minDistance = Infinity;
     let closestPlates: number[] = [];
 
     centers.forEach((center, index) => {
-        const dx = Math.abs(center.x - x); // No wrapping
+        const dx = Math.abs(center.x - x);
         const dy = Math.abs(center.y - y);
         const distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -114,7 +116,7 @@ export function findClosestPlate(
         }
     });
 
-    return closestPlates[Math.floor(Math.random() * closestPlates.length)];
+    return closestPlates[Math.floor(rng() * closestPlates.length)]; // Use seeded RNG
 }
 
 export function identifyPlateBoundaries(
@@ -163,11 +165,12 @@ export function identifyPlateBoundaries(
 export function assignPlatesUsingVoronoi(
     width: number,
     height: number,
-    plates: number
+    plates: number,
+    rng: () => number // Add RNG parameter
 ): Array<Array<number>> {
     const plateCenters = Array.from({ length: plates }, () => ({
-        x: Math.floor(Math.random() * width),
-        y: Math.floor(Math.random() * height),
+        x: Math.floor(rng() * width), // Use seeded RNG
+        y: Math.floor(rng() * height), // Use seeded RNG
     }));
 
     const plateMap = Array.from({ length: height }, () =>
@@ -181,7 +184,7 @@ export function assignPlatesUsingVoronoi(
 
             for (let i = 0; i < plateCenters.length; i++) {
                 const center = plateCenters[i];
-                const dx = Math.abs(center.x - col); // No wrapping
+                const dx = Math.abs(center.x - col);
                 const dy = Math.abs(center.y - row);
                 const distance = Math.sqrt(dx * dx + dy * dy);
 

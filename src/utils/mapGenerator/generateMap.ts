@@ -12,25 +12,35 @@ import seedrandom from 'seedrandom';
 import { Map } from './types';
 
 
-export async function generateMap(width: number, height: number, plates: number, latitudeMode: 'full' | 'partial') {
-    // Generate a new random seed for each map
-    const randomSeed = Math.random().toString();
+export async function generateMap(
+    width: number, 
+    height: number, 
+    plates: number, 
+    latitudeMode: 'full' | 'partial',
+    inputSeed?: string
+) {
+    // Use provided seed or generate a random one
+    const masterSeed = inputSeed || Date.now().toString();
+    console.log(`Using seed: ${masterSeed}`);
 
-    // Use the random seed to generate seeds for different noise functions
-    const baseSeed = seedrandom(randomSeed + 'base')();
-    const detailSeed1 = seedrandom(randomSeed + 'detail1')();
-    const detailSeed2 = seedrandom(randomSeed + 'detail2')();
-    const temperatureSeed = seedrandom(randomSeed + 'temperature')();
-    const humiditySeed = seedrandom(randomSeed + 'humidity')();
+    // Create a master random number generator
+    const masterRng = seedrandom(masterSeed);
 
-    // Generate and distort the plate map
-    let plateMap = assignPlatesUsingVoronoi(width, height, plates);
-    plateMap = distortPlateBoundaries(plateMap, width, height);
+    // Generate seeds for different noise functions using the master RNG
+    const baseSeed = masterRng();
+    const detailSeed1 = masterRng();
+    const detailSeed2 = masterRng();
+    const temperatureSeed = masterRng();
+    const humiditySeed = masterRng();
+
+    // Generate and distort the plate map using seeded random
+    let plateMap = assignPlatesUsingVoronoi(width, height, plates, masterRng);
+    plateMap = distortPlateBoundaries(plateMap, width, height, masterRng);
 
     const plateCenters = Array.from({ length: plates }, (_, i) => ({
-        x: Math.floor(Math.random() * width),
-        y: Math.floor(Math.random() * height),
-        drift: driftDirections[Math.floor(Math.random() * driftDirections.length)],
+        x: Math.floor(masterRng() * width),
+        y: Math.floor(masterRng() * height),
+        drift: driftDirections[Math.floor(masterRng() * driftDirections.length)],
     }));
 
     // Calculate plate sizes
@@ -133,16 +143,24 @@ export async function generateMap(width: number, height: number, plates: number,
         }
     }
 
-    // Randomly assign sources to some tiles with altitude >= 0.4 and ensure no neighboring sources or ocean biomes
-    const sourceCount = Math.floor((width * height) / 100); // Adjust the density of sources
-    let assignedSources = 0;
+    // Create seeded RNGs for different processes
+    const sourceRng = seedrandom(masterSeed + 'sources');
+    const villageRng = seedrandom(masterSeed + 'villages');
+    const cityRng = seedrandom(masterSeed + 'cities');
+    const smoothingRng = seedrandom(masterSeed + 'smoothing');
+    const boundaryRng = seedrandom(masterSeed + 'boundaries');
+    const riverRng = seedrandom(masterSeed + 'rivers');
+    const vegetationRng = seedrandom(masterSeed + 'vegetation');
 
-    const maxRetries = 1000; // Maximum number of retries to assign sources
+    // Randomly assign sources using seeded random
+    const sourceCount = Math.floor((width * height) / 100);
+    let assignedSources = 0;
+    const maxRetries = 1000;
     let retries = 0;
 
     while (assignedSources < sourceCount && retries < maxRetries) {
-        const row = Math.floor(Math.random() * height);
-        const col = Math.floor(Math.random() * width);
+        const row = Math.floor(sourceRng() * height);
+        const col = Math.floor(sourceRng() * width);
     
         const neighbors = neighborsCache[`${row},${col}`];
     
@@ -169,15 +187,15 @@ export async function generateMap(width: number, height: number, plates: number,
     console.log(`Found ${boundaries.length} plate boundaries.`);
 
     console.log('Applying plate boundary effects...');
-    applyPlateBoundaryEffects(map, boundaries, plateSizes);
+    applyPlateBoundaryEffects(map, boundaries, plateSizes, boundaryRng);
     console.log('Plate boundary effects applied.');
 
     console.log('Smoothing map...');
-    smoothMap(map);
+    smoothMap(map, smoothingRng);
     console.log('Map smoothed.');
 
     console.log('Generating rivers...');
-    const riverPaths = generateRivers(map, assignedSources);
+    const riverPaths = generateRivers(map, assignedSources, riverRng);
     console.log(`Generated ${riverPaths.length} rivers.`);
 
     // Turn sources into lakes if they don't neighbor any rivers
@@ -230,7 +248,7 @@ export async function generateMap(width: number, height: number, plates: number,
     console.log('Feature effects applied.');
 
     console.log('Adjusting vegetation based on water proximity...');
-    adjustVegetationBasedOnWater(map, height, width);
+    adjustVegetationBasedOnWater(map, height, width, vegetationRng);
     console.log('Vegetation adjustment complete.');
 
     console.log('Applying rain shadow effect...');
@@ -271,7 +289,7 @@ export async function generateMap(width: number, height: number, plates: number,
             });
     
             if (!hasNeighboringVillage && !hasVillageInTwoTileRange && tile.habitability > 0.75) {
-                if (Math.random() < 0.5) {
+                if (villageRng() < 0.5) {
                     tile.features.push('village');
                     assignedVillages++;
                 }
@@ -298,5 +316,8 @@ export async function generateMap(width: number, height: number, plates: number,
 
     console.log(`Converted ${convertedCities} villages into cities.`);
 
-    return { map }; // Return both map and riverPaths
+    return { 
+        map, 
+        seed: masterSeed // Return the seed that was actually used
+    };
 }

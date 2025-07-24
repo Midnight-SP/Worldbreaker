@@ -1,17 +1,45 @@
 import React from 'react';
-import { Tile, Map } from '../utils/mapGenerator/types';
+import { Map, Tile } from '../utils/mapGenerator/types';
 
 interface HexGridProps {
     map: Map;
     visualizationType: string;
     plates: number;
     setTooltip: React.Dispatch<React.SetStateAction<string | null>>;
-    showFeatures: boolean;
+    showNaturalFeatures: boolean;
+    showManmadeFeatures: boolean;
 }
 
-const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTooltip, showFeatures }) => {
-    const hexWidth = 50;
-    const hexHeight = Math.sqrt(3) / 2 * hexWidth;
+const HexGrid: React.FC<HexGridProps> = ({ 
+    map, 
+    visualizationType, 
+    plates, 
+    setTooltip, 
+    showNaturalFeatures, 
+    showManmadeFeatures 
+}) => {
+    const hexWidth = 20;
+    const hexHeight = 20;
+
+    // Define natural and manmade features
+    const naturalFeatures = ['source', 'lake', 'river', 'volcano'];
+    const manmadeFeatures = ['village', 'city'];
+
+    // Helper function to check if a feature should be shown
+    const shouldShowFeature = (feature: string): boolean => {
+        if (naturalFeatures.includes(feature)) {
+            return showNaturalFeatures;
+        }
+        if (manmadeFeatures.includes(feature)) {
+            return showManmadeFeatures;
+        }
+        return false; // For any other features, don't show by default
+    };
+
+    // Helper function to get filtered features for tooltip
+    const getVisibleFeatures = (features: string[]): string[] => {
+        return features.filter(feature => shouldShowFeature(feature));
+    };
 
     const getHexCenter = (row: number, col: number): [number, number] => {
         const x = col * (hexWidth * 0.75);
@@ -66,6 +94,9 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                 {map.map((row, rowIndex) =>
                     row.map((tile, colIndex) => {
                         const [x, y] = getHexCenter(rowIndex, colIndex);
+                        
+                        // Get visible features for tooltip
+                        const visibleFeatures = getVisibleFeatures(tile.features);
 
                         // Build the tooltip description
                         const tileDescription = `
@@ -79,7 +110,7 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                             Latitude: ${tile.latitude.toFixed(2)}
                             Biome: ${tile.terrain}
                             Climate Zone: ${tile.climateZone}
-                            ${showFeatures && tile.features.length > 0 ? `Features: ${tile.features.join(', ')}` : ''}
+                            ${visibleFeatures.length > 0 ? `Features: ${visibleFeatures.join(', ')}` : ''}
                         `.trim();
 
                         return (
@@ -99,69 +130,73 @@ const HexGrid: React.FC<HexGridProps> = ({ map, visualizationType, plates, setTo
                                     onMouseEnter={() => setTooltip(tileDescription)}
                                     onMouseLeave={() => setTooltip(null)}
                                 />
-                                {showFeatures && tile.features.includes('source') && (
+
+                                {/* Natural Features */}
+                                {shouldShowFeature('source') && tile.features.includes('source') && (
                                     <image
                                         href="/icons/source-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseEnter={() => setTooltip(tileDescription)}
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {showFeatures && tile.features.includes('river') && (
+                                {shouldShowFeature('river') && tile.features.includes('river') && (
                                     <image
                                         href="/icons/river-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseEnter={() => setTooltip(tileDescription)}
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {showFeatures && tile.features.includes('lake') && (
+                                {shouldShowFeature('lake') && tile.features.includes('lake') && (
                                     <image
                                         href="/icons/lake-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseEnter={() => setTooltip(tileDescription)}
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {showFeatures && tile.features.includes('volcano') && (
+                                {shouldShowFeature('volcano') && tile.features.includes('volcano') && (
                                     <image
                                         href="/icons/volcano-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseEnter={() => setTooltip(tileDescription)}
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {showFeatures && tile.features.includes('village') && (
+
+                                {/* Manmade Features */}
+                                {shouldShowFeature('village') && tile.features.includes('village') && (
                                     <image
-                                        href="/icons/village-icon.svg" // Replace with the path to your village icon
+                                        href="/icons/village-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseEnter={() => setTooltip(tileDescription)}
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {showFeatures && tile.features.includes('city') && (
+                                {shouldShowFeature('city') && tile.features.includes('city') && (
                                     <image
-                                        href="/icons/city-icon.svg" // Replace with the path to your city icon
+                                        href="/icons/city-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}
                                         height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)} // Use tile's tooltip
+                                        onMouseEnter={() => setTooltip(tileDescription)}
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}

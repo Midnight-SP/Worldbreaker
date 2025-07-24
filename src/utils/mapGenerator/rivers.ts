@@ -4,7 +4,8 @@ import { Map } from './types';
 
 export function generateRivers(
     map: Map,
-    riverCount: number
+    riverCount: number,
+    rng: () => number
 ): Array<{ start: [number, number]; end: [number, number]; width: number }> {
     const height = map.length;
     const width = map[0].length;
@@ -27,7 +28,7 @@ export function generateRivers(
         }
 
         if (sourceTiles.length > 0) {
-            const randomSource = sourceTiles[Math.floor(Math.random() * sourceTiles.length)];
+            const randomSource = sourceTiles[Math.floor(rng() * sourceTiles.length)];
             row = randomSource.row;
             col = randomSource.col;
         } else {
