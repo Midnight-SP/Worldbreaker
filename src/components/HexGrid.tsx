@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Map, Tile } from '../utils/mapGenerator/types';
+import { identifyLandmasses } from '../utils/mapGenerator/landmasses';
 
 interface HexGridProps {
     map: Map;
@@ -25,6 +26,14 @@ const HexGrid: React.FC<HexGridProps> = ({
     const naturalFeatures = ['source', 'lake', 'river', 'volcano'];
     const manmadeFeatures = ['village', 'city'];
 
+    // Memoize landmass identification to avoid recalculating on every render
+    const landmassMap = useMemo(() => {
+        if (visualizationType === 'landmasses') {
+            return identifyLandmasses(map);
+        }
+        return null;
+    }, [map, visualizationType]);
+
     // Helper function to check if a feature should be shown
     const shouldShowFeature = (feature: string): boolean => {
         if (naturalFeatures.includes(feature)) {
@@ -33,7 +42,7 @@ const HexGrid: React.FC<HexGridProps> = ({
         if (manmadeFeatures.includes(feature)) {
             return showManmadeFeatures;
         }
-        return false; // For any other features, don't show by default
+        return false;
     };
 
     // Helper function to get filtered features for tooltip
@@ -47,7 +56,7 @@ const HexGrid: React.FC<HexGridProps> = ({
         return [x, y];
     };
 
-    const getFillColor = (tile: Tile): string => {
+    const getFillColor = (tile: Tile, row?: number, col?: number): string => {
         switch (visualizationType) {
             case 'altitude':
                 const altitudeColor = Math.floor((tile.altitude + 1) * 127.5);
@@ -65,21 +74,34 @@ const HexGrid: React.FC<HexGridProps> = ({
                 return `hsl(${tile.plate * (360 / plates)}, 70%, 50%)`;
             case 'habitability':
                 const habitabilityColor = Math.floor(tile.habitability * 255);
-                return `rgb(${255 - habitabilityColor}, ${habitabilityColor}, 0)`; // Red to green gradient
+                return `rgb(${255 - habitabilityColor}, ${habitabilityColor}, 0)`;
+            case 'landmasses':
+                if (landmassMap && row !== undefined && col !== undefined) {
+                    const landmassTile = landmassMap[row][col];
+                    if (landmassTile.landmassId !== undefined) {
+                        // Generate a unique color for each landmass
+                        const hue = (landmassTile.landmassId * 137.5) % 360; // Golden angle for good color distribution
+                        return `hsl(${hue}, 70%, 55%)`;
+                    } else {
+                        // Ocean/water tiles - use a blue color
+                        return '#2E8B57'; // Sea green for ocean
+                    }
+                }
+                return '#2E8B57'; // Default ocean color
             case 'climate':
                 const climateColors: Record<string, string> = {
-                    equatorial: '#228B22', // Forest green
-                    'tropical monsoon': '#32CD32', // Lime green
-                    'tropical dry': '#FFD700', // Gold
-                    mediterranean: '#F4A460', // Sandy brown
-                    'sub-tropical dry': '#D2B48C', // Tan
-                    'temperate maritime': '#87CEEB', // Sky blue
-                    'temperate continental': '#4682B4', // Steel blue
-                    'sub-polar': '#ADD8E6', // Light blue
-                    polar: '#FFFFFF', // White
-                    unknown: '#808080', // Gray
+                    equatorial: '#228B22',
+                    'tropical monsoon': '#32CD32',
+                    'tropical dry': '#FFD700',
+                    mediterranean: '#F4A460',
+                    'sub-tropical dry': '#D2B48C',
+                    'temperate maritime': '#87CEEB',
+                    'temperate continental': '#4682B4',
+                    'sub-polar': '#ADD8E6',
+                    polar: '#FFFFFF',
+                    unknown: '#808080',
                 };
-                return climateColors[tile.climateZone] || '#808080'; // Default to gray
+                return climateColors[tile.climateZone] || '#808080';
             case 'biomes':
             default:
                 return '';
@@ -98,6 +120,17 @@ const HexGrid: React.FC<HexGridProps> = ({
                         // Get visible features for tooltip
                         const visibleFeatures = getVisibleFeatures(tile.features);
 
+                        // Get landmass ID for tooltip if in landmasses mode
+                        let landmassInfo = '';
+                        if (visualizationType === 'landmasses' && landmassMap) {
+                            const landmassTile = landmassMap[rowIndex][colIndex];
+                            if (landmassTile.landmassId !== undefined) {
+                                landmassInfo = `Landmass ID: ${landmassTile.landmassId}`;
+                            } else {
+                                landmassInfo = 'Water';
+                            }
+                        }
+
                         // Build the tooltip description
                         const tileDescription = `
                             Coordinates: (${colIndex}, ${rowIndex})
@@ -110,6 +143,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                             Latitude: ${tile.latitude.toFixed(2)}
                             Biome: ${tile.terrain}
                             Climate Zone: ${tile.climateZone}
+                            ${landmassInfo ? landmassInfo : ''}
                             ${visibleFeatures.length > 0 ? `Features: ${visibleFeatures.join(', ')}` : ''}
                         `.trim();
 
@@ -126,7 +160,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                                         ${x + hexWidth / 4},${y - hexHeight / 2}
                                     `}
                                     className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
-                                    fill={visualizationType !== 'biomes' ? getFillColor(tile) : undefined}
+                                    fill={visualizationType !== 'biomes' ? getFillColor(tile, rowIndex, colIndex) : undefined}
                                     onMouseEnter={() => setTooltip(tileDescription)}
                                     onMouseLeave={() => setTooltip(null)}
                                 />

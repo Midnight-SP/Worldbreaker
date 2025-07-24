@@ -265,6 +265,7 @@ const App: React.FC = () => {
                                     <option value="vegetation">Vegetation</option>
                                     <option value="habitability">Habitability</option>
                                     <option value="plates">Tectonic Plates</option>
+                                    <option value="landmasses">Landmasses</option>
                                 </select>
                             </div>
                             
@@ -338,6 +339,14 @@ const App: React.FC = () => {
                                         <div className="info-item">
                                             <label>Land Coverage</label>
                                             <p>{(100 - calculateWorldStats(map).oceanCoverage).toFixed(1)}%</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Landmasses</label>
+                                            <p>{calculateWorldStats(map).landmassCount}</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Largest Landmass</label>
+                                            <p>{calculateWorldStats(map).largestLandmassSize} tiles</p>
                                         </div>
                                     </div>
                                 </div>

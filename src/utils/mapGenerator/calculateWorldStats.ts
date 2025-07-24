@@ -1,5 +1,6 @@
 import { oceanBiomes, landBiomes } from "./biomes";
 import { Map } from "./types";
+import { identifyLandmasses, getLandmassStats } from "./landmasses";
 
 export const calculateWorldStats = (map: Map) => {
     const totalTiles = map.length * map[0].length;
@@ -81,6 +82,10 @@ export const calculateWorldStats = (map: Map) => {
             percentage: ((count / totalTiles) * 100).toFixed(1),
         }));
 
+    // Get landmass information
+    const landmassMap = identifyLandmasses(map);
+    const landmasses = getLandmassStats(landmassMap);
+
     return {
         averageAltitude,
         averageTemperature,
@@ -95,5 +100,7 @@ export const calculateWorldStats = (map: Map) => {
         cityCount,
         topLandBiomes,
         topOceanBiomes,
+        landmassCount: landmasses.length,
+        largestLandmassSize: landmasses.length > 0 ? landmasses[0].size : 0,
     };
 };
