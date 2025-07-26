@@ -265,7 +265,7 @@ const App: React.FC = () => {
                                     <option value="vegetation">Vegetation</option>
                                     <option value="habitability">Habitability</option>
                                     <option value="plates">Tectonic Plates</option>
-                                    <option value="landmasses">Landmasses</option>
+                                    <option value="geographic-regions">Geographic Regions</option>
                                 </select>
                             </div>
                             
@@ -341,12 +341,16 @@ const App: React.FC = () => {
                                             <p>{(100 - calculateWorldStats(map).oceanCoverage).toFixed(1)}%</p>
                                         </div>
                                         <div className="info-item">
-                                            <label>Landmasses</label>
-                                            <p>{calculateWorldStats(map).landmassCount}</p>
+                                            <label>Continents</label>
+                                            <p>{calculateWorldStats(map).continentCount}</p>
                                         </div>
                                         <div className="info-item">
-                                            <label>Largest Landmass</label>
-                                            <p>{calculateWorldStats(map).largestLandmassSize} tiles</p>
+                                            <label>Major Oceans</label>
+                                            <p>{calculateWorldStats(map).oceanCount}</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Total Regions</label>
+                                            <p>{calculateWorldStats(map).geographicRegionCount}</p>
                                         </div>
                                     </div>
                                 </div>

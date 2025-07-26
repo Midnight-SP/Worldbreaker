@@ -9,6 +9,8 @@ export type Tile = {
     latitude: number;
     habitability: number;
     climateZone: string;
+    regionId?: number;
+    regionType?: 'continent' | 'island' | 'archipelago' | 'ocean' | 'sea' | 'strait' | 'bay';
 };
 
 export type Map = Tile[][];

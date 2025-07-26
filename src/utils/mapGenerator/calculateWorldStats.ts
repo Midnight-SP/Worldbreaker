@@ -1,6 +1,6 @@
 import { oceanBiomes, landBiomes } from "./biomes";
 import { Map } from "./types";
-import { identifyLandmasses, getLandmassStats } from "./landmasses";
+import { getGeographicRegionStats } from "./geographicRegions";
 
 export const calculateWorldStats = (map: Map) => {
     const totalTiles = map.length * map[0].length;
@@ -35,25 +35,11 @@ export const calculateWorldStats = (map: Map) => {
                 landBiomeCounts[tile.terrain] = (landBiomeCounts[tile.terrain] || 0) + 1;
             }
 
-            if (tile.features.includes('source')) {
-                sourceCount++;
-            }
-
-            if (tile.features.includes('lake')) {
-                lakeCount++;
-            }
-
-            if (tile.features.includes('volcano')) {
-                volcanoCount++;
-            }
-
-            if (tile.features.includes('village')) {
-                villageCount++;
-            }
-
-            if (tile.features.includes('city')) {
-                cityCount++;
-            }
+            if (tile.features.includes('source')) sourceCount++;
+            if (tile.features.includes('lake')) lakeCount++;
+            if (tile.features.includes('volcano')) volcanoCount++;
+            if (tile.features.includes('village')) villageCount++;
+            if (tile.features.includes('city')) cityCount++;
         });
     });
 
@@ -82,9 +68,15 @@ export const calculateWorldStats = (map: Map) => {
             percentage: ((count / totalTiles) * 100).toFixed(1),
         }));
 
-    // Get landmass information
-    const landmassMap = identifyLandmasses(map);
-    const landmasses = getLandmassStats(landmassMap);
+    // Get geographic regions information - much simpler now!
+    const geographicRegions = getGeographicRegionStats(map);
+    const continents = geographicRegions.filter(r => r.type === 'continent');
+    const islands = geographicRegions.filter(r => r.type === 'island');
+    const archipelagos = geographicRegions.filter(r => r.type === 'archipelago');
+    const oceans = geographicRegions.filter(r => r.type === 'ocean');
+    const seas = geographicRegions.filter(r => r.type === 'sea');
+    const bays = geographicRegions.filter(r => r.type === 'bay');
+    const straits = geographicRegions.filter(r => r.type === 'strait');
 
     return {
         averageAltitude,
@@ -100,7 +92,15 @@ export const calculateWorldStats = (map: Map) => {
         cityCount,
         topLandBiomes,
         topOceanBiomes,
-        landmassCount: landmasses.length,
-        largestLandmassSize: landmasses.length > 0 ? landmasses[0].size : 0,
+        geographicRegionCount: geographicRegions.length,
+        continentCount: continents.length,
+        islandCount: islands.length,
+        archipelagoCount: archipelagos.length,
+        oceanCount: oceans.length,
+        seaCount: seas.length,
+        bayCount: bays.length,
+        straitCount: straits.length,
+        totalLandRegions: continents.length + islands.length + archipelagos.length,
+        totalWaterRegions: oceans.length + seas.length + bays.length + straits.length,
     };
 };

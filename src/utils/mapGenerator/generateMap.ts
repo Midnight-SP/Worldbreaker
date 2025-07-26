@@ -10,6 +10,7 @@ import { applyFeatureEffects } from './applyFeatureEffects';
 import { adjustVegetationBasedOnWater, findNearestWaterDistance } from './vegetation';
 import seedrandom from 'seedrandom';
 import { Map } from './types';
+import { identifyGeographicRegions } from './geographicRegions';
 
 
 export async function generateMap(
@@ -315,6 +316,11 @@ export async function generateMap(
     }
 
     console.log(`Converted ${convertedCities} villages into cities.`);
+
+    // Identify geographic regions (e.g., continents, islands)
+    console.log('Identifying geographic regions...');
+    identifyGeographicRegions(map);
+    console.log('Geographic regions identified.');
 
     return { 
         map, 

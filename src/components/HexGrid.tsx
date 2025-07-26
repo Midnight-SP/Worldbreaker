@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Map, Tile } from '../utils/mapGenerator/types';
-import { identifyLandmasses } from '../utils/mapGenerator/landmasses';
+import { getRegionColor } from '../utils/mapGenerator/geographicRegions';
 
 interface HexGridProps {
     map: Map;
@@ -25,14 +25,6 @@ const HexGrid: React.FC<HexGridProps> = ({
     // Define natural and manmade features
     const naturalFeatures = ['source', 'lake', 'river', 'volcano'];
     const manmadeFeatures = ['village', 'city'];
-
-    // Memoize landmass identification to avoid recalculating on every render
-    const landmassMap = useMemo(() => {
-        if (visualizationType === 'landmasses') {
-            return identifyLandmasses(map);
-        }
-        return null;
-    }, [map, visualizationType]);
 
     // Helper function to check if a feature should be shown
     const shouldShowFeature = (feature: string): boolean => {
@@ -75,19 +67,11 @@ const HexGrid: React.FC<HexGridProps> = ({
             case 'habitability':
                 const habitabilityColor = Math.floor(tile.habitability * 255);
                 return `rgb(${255 - habitabilityColor}, ${habitabilityColor}, 0)`;
-            case 'landmasses':
-                if (landmassMap && row !== undefined && col !== undefined) {
-                    const landmassTile = landmassMap[row][col];
-                    if (landmassTile.landmassId !== undefined) {
-                        // Generate a unique color for each landmass
-                        const hue = (landmassTile.landmassId * 137.5) % 360; // Golden angle for good color distribution
-                        return `hsl(${hue}, 70%, 55%)`;
-                    } else {
-                        // Ocean/water tiles - use a blue color
-                        return '#2E8B57'; // Sea green for ocean
-                    }
+            case 'geographic-regions':
+                if (tile.regionId !== undefined && tile.regionType) {
+                    return getRegionColor(tile.regionId, tile.regionType);
                 }
-                return '#2E8B57'; // Default ocean color
+                return '#404040'; // Default gray for unassigned regions
             case 'climate':
                 const climateColors: Record<string, string> = {
                     equatorial: '#228B22',
@@ -113,39 +97,36 @@ const HexGrid: React.FC<HexGridProps> = ({
             <svg
                 viewBox={`-${hexWidth / 2} -${hexHeight / 2} ${map[0].length * hexWidth * 0.75 + hexWidth} ${map.length * hexHeight + hexHeight}`}
             >
-                {map.map((row, rowIndex) =>
-                    row.map((tile, colIndex) => {
+                {map.map((row: Tile[], rowIndex: number) =>
+                    row.map((tile: Tile, colIndex: number) => {
                         const [x, y] = getHexCenter(rowIndex, colIndex);
                         
                         // Get visible features for tooltip
                         const visibleFeatures = getVisibleFeatures(tile.features);
 
-                        // Get landmass ID for tooltip if in landmasses mode
-                        let landmassInfo = '';
-                        if (visualizationType === 'landmasses' && landmassMap) {
-                            const landmassTile = landmassMap[rowIndex][colIndex];
-                            if (landmassTile.landmassId !== undefined) {
-                                landmassInfo = `Landmass ID: ${landmassTile.landmassId}`;
+                        // Get geographic region info for tooltip
+                        let regionInfo = '';
+                        if (visualizationType === 'geographic-regions') {
+                            if (tile.regionId !== undefined && tile.regionType) {
+                                regionInfo = `${tile.regionType}: Region ${tile.regionId}`;
                             } else {
-                                landmassInfo = 'Water';
+                                regionInfo = 'Unassigned Region';
                             }
                         }
 
                         // Build the tooltip description
-                        const tileDescription = `
-                            Coordinates: (${colIndex}, ${rowIndex})
-                            Plate: ${tile.plate}
-                            Altitude: ${tile.altitude.toFixed(2)}
-                            Temperature: ${tile.temperature.toFixed(2)}
-                            Humidity: ${tile.humidity.toFixed(2)}
-                            Vegetation: ${tile.vegetation.toFixed(2)}
-                            Habitability: ${tile.habitability.toFixed(2)}
-                            Latitude: ${tile.latitude.toFixed(2)}
-                            Biome: ${tile.terrain}
-                            Climate Zone: ${tile.climateZone}
-                            ${landmassInfo ? landmassInfo : ''}
-                            ${visibleFeatures.length > 0 ? `Features: ${visibleFeatures.join(', ')}` : ''}
-                        `.trim();
+                        const tileDescription = `Coordinates: (${colIndex}, ${rowIndex})
+                        Plate: ${tile.plate}
+                        Altitude: ${tile.altitude.toFixed(2)}
+                        Temperature: ${tile.temperature.toFixed(2)}
+                        Humidity: ${tile.humidity.toFixed(2)}
+                        Vegetation: ${tile.vegetation.toFixed(2)}
+                        Habitability: ${tile.habitability.toFixed(2)}
+                        Latitude: ${tile.latitude.toFixed(2)}
+                        Biome: ${tile.terrain.replace(/-/g, ' ')}
+                        Climate: ${tile.climateZone}
+                        Region: ${tile.regionType}
+                        ${visibleFeatures.length > 0 ? `Features: ${visibleFeatures.join(', ')}` : ''}`;
 
                         return (
                             <g key={`${rowIndex}-${colIndex}`}>
@@ -165,7 +146,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                                     onMouseLeave={() => setTooltip(null)}
                                 />
 
-                                {/* Natural Features */}
+                                {/* Feature rendering remains the same */}
                                 {shouldShowFeature('source') && tile.features.includes('source') && (
                                     <image
                                         href="/icons/source-icon.svg"
@@ -210,8 +191,6 @@ const HexGrid: React.FC<HexGridProps> = ({
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-
-                                {/* Manmade Features */}
                                 {shouldShowFeature('village') && tile.features.includes('village') && (
                                     <image
                                         href="/icons/village-icon.svg"
