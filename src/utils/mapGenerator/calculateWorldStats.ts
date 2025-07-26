@@ -76,7 +76,7 @@ export const calculateWorldStats = (map: Map) => {
     const oceans = geographicRegions.filter(r => r.type === 'ocean');
     const seas = geographicRegions.filter(r => r.type === 'sea');
     const bays = geographicRegions.filter(r => r.type === 'bay');
-    const straits = geographicRegions.filter(r => r.type === 'strait');
+    const coastalWaters = geographicRegions.filter(r => r.type === 'coastal-waters');
 
     return {
         averageAltitude,
@@ -99,8 +99,8 @@ export const calculateWorldStats = (map: Map) => {
         oceanCount: oceans.length,
         seaCount: seas.length,
         bayCount: bays.length,
-        straitCount: straits.length,
+        coastalWaterCount: coastalWaters.length,
         totalLandRegions: continents.length + islands.length + archipelagos.length,
-        totalWaterRegions: oceans.length + seas.length + bays.length + straits.length,
+        totalWaterRegions: oceans.length + seas.length + bays.length + coastalWaters.length,
     };
 };

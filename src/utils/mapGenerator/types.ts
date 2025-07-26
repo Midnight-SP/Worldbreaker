@@ -10,7 +10,7 @@ export type Tile = {
     habitability: number;
     climateZone: string;
     regionId?: number;
-    regionType?: 'continent' | 'island' | 'archipelago' | 'ocean' | 'sea' | 'strait' | 'bay';
+    regionType?: 'continent' | 'island' | 'archipelago' | 'ocean' | 'sea' | 'coastal-waters' | 'bay';
 };
 
 export type Map = Tile[][];

@@ -4,7 +4,7 @@ import { oceanBiomes } from './biomes';
 
 export interface GeographicRegion {
     id: number;
-    type: 'continent' | 'island' | 'archipelago' | 'ocean' | 'sea' | 'strait' | 'bay';
+    type: 'continent' | 'island' | 'archipelago' | 'ocean' | 'sea' | 'coastal-waters' | 'bay';
     name: string;
     tiles: Array<{ row: number; col: number }>;
 
@@ -13,6 +13,7 @@ export interface GeographicRegion {
     averageElevation?: number;
     distanceFromEdge: number;
     isEnclosed?: boolean;
+    parentLandRegionId?: number; // NEW: Track which land region this coastal water belongs to
 }
 
 export function identifyGeographicRegions(map: Map): void {
@@ -43,285 +44,59 @@ export function identifyGeographicRegions(map: Map): void {
         return true;
     };
 
-    // SIMPLIFIED: Check if a tile is part of a straight-line water passage
-    const isSingleTileStrait = (row: number, col: number): boolean => {
-        if (isLandTile(map[row][col])) return false;
+    // PRE-CALCULATE: Distance from land AND closest land region for all water tiles
+    console.log('Pre-calculating distance from land and closest land region for all water tiles...');
+    const landDistanceMap = new Map<string, number>();
+    const closestLandRegionMap = new Map<string, number>(); // NEW: Track closest land region
+    
+    // Multi-source BFS from all land tiles at once
+    const queue: Array<{ row: number; col: number; distance: number; landRegionId: number }> = [];
+    const visitedBFS = new Set<string>();
+    
+    // Initialize queue with all land tiles (distance 0)
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            if (isLandTile(map[row][col])) {
+                const key = `${row},${col}`;
+                // We'll get the landRegionId after Step 1, so for now use a placeholder
+                queue.push({ row, col, distance: 0, landRegionId: -1 });
+                visitedBFS.add(key);
+                landDistanceMap.set(key, 0);
+            }
+        }
+    }
+    
+    // BFS to calculate distance from land for all tiles
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current) continue;
+        
+        const { row, col, distance, landRegionId } = current;
         
         const neighbors = getHexNeighbors(map, row, col, height, width);
-        const landNeighbors = neighbors.filter(n => isLandTile(map[n.row][n.col]));
-        const waterNeighbors = neighbors.filter(n => !isLandTile(map[n.row][n.col]));
-        
-        // Must have at least 2 land neighbors to be narrow
-        if (landNeighbors.length < 2) return false;
-        // Must have exactly 2 water neighbors (for a straight line)
-        if (waterNeighbors.length !== 2) return false;
-        
-        // The 2 water neighbors must be in opposite directions
-        const water1 = waterNeighbors[0];
-        const water2 = waterNeighbors[1];
-        
-        const dx1 = water1.col - col;
-        const dy1 = water1.row - row;
-        const dx2 = water2.col - col;
-        const dy2 = water2.row - row;
-        
-        // Check if they are opposite directions
-        if (!areOppositeDirections(dx1, dy1, dx2, dy2)) return false;
-        
-        // Both water neighbors must connect to larger water bodies
-        return hasWaterBodyAccess(water1, row, col) && hasWaterBodyAccess(water2, row, col);
-    };
-
-    // Check if two directions are opposite (for hex grid)
-    const areOppositeDirections = (dx1: number, dy1: number, dx2: number, dy2: number): boolean => {
-        // For hex grid, exact opposites
-        return (dx1 === -dx2 && dy1 === -dy2);
-    };
-
-    // Quick water body access check
-    const hasWaterBodyAccess = (waterTile: { row: number; col: number }, avoidRow: number, avoidCol: number): boolean => {
-        const queue = [waterTile];
-        const visited = new Set<string>();
-        const maxSearch = 5; // Reduced search area
-        
-        while (queue.length > 0 && visited.size < maxSearch) {
-            const current = queue.shift()!;
-            const key = `${current.row},${current.col}`;
-            
-            if (visited.has(key)) continue;
-            if (current.row < 0 || current.row >= height || current.col < 0 || current.col >= width) continue;
-            if (current.row === avoidRow && current.col === avoidCol) continue;
-            if (isLandTile(map[current.row][current.col])) continue;
-            
-            visited.add(key);
-            
-            // If we found a small water area, consider it accessible
-            if (visited.size >= 3) return true;
-            
-            const neighbors = getHexNeighbors(map, current.row, current.col, height, width);
-            for (const neighbor of neighbors) {
-                if (neighbor.row === avoidRow && neighbor.col === avoidCol) continue;
-                const neighborKey = `${neighbor.row},${neighbor.col}`;
-                if (!visited.has(neighborKey) && !isLandTile(map[neighbor.row][neighbor.col])) {
-                    queue.push(neighbor);
-                }
+        for (const neighbor of neighbors) {
+            const neighborKey = `${neighbor.row},${neighbor.col}`;
+            if (!visitedBFS.has(neighborKey)) {
+                visitedBFS.add(neighborKey);
+                const newDistance = distance + 1;
+                landDistanceMap.set(neighborKey, newDistance);
+                queue.push({ row: neighbor.row, col: neighbor.col, distance: newDistance, landRegionId });
             }
         }
-        
-        return visited.size >= 3;
+    }
+    
+    console.log('Distance calculation complete.');
+
+    // Fast lookup functions
+    const getDistanceFromLand = (row: number, col: number): number => {
+        return landDistanceMap.get(`${row},${col}`) || Infinity;
     };
 
-    // NEW: Check if a tile is part of a straight-line passage (water or land)
-    const isPartOfStraightPassage = (row: number, col: number): { isStrait: boolean; direction?: { dx: number; dy: number } } => {
-        // Check all possible straight-line directions from this tile
-        const directions = [
-            { dx: 1, dy: 0 },   // East
-            { dx: -1, dy: 0 },  // West
-            { dx: 0, dy: 1 },   // South
-            { dx: 0, dy: -1 },  // North
-            { dx: 1, dy: 1 },   // Southeast
-            { dx: -1, dy: -1 }  // Northwest
-        ];
-        
-        for (const direction of directions) {
-            if (isValidStraitInDirection(row, col, direction)) {
-                return { isStrait: true, direction };
-            }
-        }
-        
-        return { isStrait: false };
+    const getClosestLandRegion = (row: number, col: number): number | undefined => {
+        return closestLandRegionMap.get(`${row},${col}`);
     };
 
-    // NEW: Check if there's a valid strait in a specific direction
-    const isValidStraitInDirection = (startRow: number, startCol: number, direction: { dx: number; dy: number }): boolean => {
-        const sequence: Array<{ row: number; col: number; isLand: boolean }> = [];
-        
-        // Check sequence in both directions (up to 7 tiles total: L W W W W W L)
-        for (let i = -3; i <= 3; i++) {
-            const row = startRow + (i * direction.dy);
-            const col = startCol + (i * direction.dx);
-            
-            if (row < 0 || row >= height || col < 0 || col >= width) continue;
-            
-            const isLand = isLandTile(map[row][col]);
-            sequence.push({ row, col, isLand });
-        }
-        
-        // Check if this sequence matches strait pattern: L W+ L
-        return isValidStraitSequence(sequence);
-    };
-
-    // NEW: Check if a sequence of tiles forms a valid strait pattern
-    const isValidStraitSequence = (sequence: Array<{ row: number; col: number; isLand: boolean }>): boolean => {
-        if (sequence.length < 3) return false; // Need at least L W L
-        
-        // Find land-water-land patterns
-        for (let i = 0; i < sequence.length - 2; i++) {
-            // Look for pattern: Land, 1-5 Water tiles, Land
-            if (sequence[i].isLand) {
-                let waterCount = 0;
-                let j = i + 1;
-                
-                // Count consecutive water tiles
-                while (j < sequence.length && !sequence[j].isLand) {
-                    waterCount++;
-                    j++;
-                }
-                
-                // Check if we have: Land + 1-5 Water + Land
-                if (waterCount >= 1 && waterCount <= 5 && j < sequence.length && sequence[j].isLand) {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    };
-
-    // SIMPLIFIED: Identify all strait tiles (both water and land that are part of straits)
-    const identifyStraitTiles = (): Array<{ row: number; col: number }> => {
-        const straitTiles: Array<{ row: number; col: number }> = [];
-        const processedTiles = new Set<string>();
-        
-        for (let row = 0; row < height; row++) {
-            for (let col = 0; col < width; col++) {
-                const key = `${row},${col}`;
-                if (processedTiles.has(key)) continue;
-                
-                const result = isPartOfStraightPassage(row, col);
-                if (result.isStrait && result.direction) {
-                    // Find the complete strait line in this direction
-                    const straitLine = getCompleteStraitLine(row, col, result.direction);
-                    
-                    // Add all tiles in this strait line
-                    for (const tile of straitLine) {
-                        const tileKey = `${tile.row},${tile.col}`;
-                        if (!processedTiles.has(tileKey)) {
-                            // Only add water tiles to strait regions (land tiles stay as land regions)
-                            if (!isLandTile(map[tile.row][tile.col])) {
-                                straitTiles.push(tile);
-                            }
-                            processedTiles.add(tileKey);
-                        }
-                    }
-                }
-            }
-        }
-        
-        return straitTiles;
-    };
-
-    // NEW: Get the complete strait line in a given direction
-    const getCompleteStraitLine = (startRow: number, startCol: number, direction: { dx: number; dy: number }): Array<{ row: number; col: number }> => {
-        const line: Array<{ row: number; col: number }> = [];
-        
-        // Extend in both directions to find the complete line
-        const positions: Array<{ row: number; col: number }> = [];
-        
-        // Go backwards
-        for (let i = -6; i < 0; i++) {
-            const row = startRow + (i * direction.dy);
-            const col = startCol + (i * direction.dx);
-            if (row >= 0 && row < height && col >= 0 && col < width) {
-                positions.push({ row, col });
-            }
-        }
-        
-        // Add current position
-        positions.push({ row: startRow, col: startCol });
-        
-        // Go forwards
-        for (let i = 1; i <= 6; i++) {
-            const row = startRow + (i * direction.dy);
-            const col = startCol + (i * direction.dx);
-            if (row >= 0 && row < height && col >= 0 && col < width) {
-                positions.push({ row, col });
-            }
-        }
-        
-        // Find the L W+ L pattern in this line
-        const sequence = positions.map(pos => ({
-            ...pos,
-            isLand: isLandTile(map[pos.row][pos.col])
-        }));
-        
-        // Extract the strait portion (including the land endpoints)
-        for (let i = 0; i < sequence.length - 2; i++) {
-            if (sequence[i].isLand) {
-                let waterCount = 0;
-                let j = i + 1;
-                
-                while (j < sequence.length && !sequence[j].isLand) {
-                    waterCount++;
-                    j++;
-                }
-                
-                if (waterCount >= 1 && waterCount <= 5 && j < sequence.length && sequence[j].isLand) {
-                    // Found L W+ L pattern, return the complete strait
-                    for (let k = i; k <= j; k++) {
-                        line.push({ row: sequence[k].row, col: sequence[k].col });
-                    }
-                    break;
-                }
-            }
-        }
-        
-        return line;
-    };
-
-    // SIMPLIFIED: Group strait tiles into regions (they should already be linear)
-    const expandStraitRegions = (straitTiles: Array<{ row: number; col: number }>): Array<Array<{ row: number; col: number }>> => {
-        const regions: Array<Array<{ row: number; col: number }>> = [];
-        const visitedStrait = new Set<string>();
-        
-        for (const tile of straitTiles) {
-            const key = `${tile.row},${tile.col}`;
-            if (visitedStrait.has(key)) continue;
-            
-            // Find connected strait tiles (should form a line)
-            const region = findConnectedStraitTiles(tile, straitTiles, visitedStrait);
-            
-            if (region.length > 0 && region.length <= 5) { // 1-5 water tiles
-                regions.push(region);
-            }
-        }
-        
-        return regions;
-    };
-
-    // NEW: Find all strait tiles connected to a starting tile
-    const findConnectedStraitTiles = (
-        startTile: { row: number; col: number }, 
-        allStraitTiles: Array<{ row: number; col: number }>,
-        visitedStrait: Set<string>
-    ): Array<{ row: number; col: number }> => {
-        const region: Array<{ row: number; col: number }> = [];
-        const queue = [startTile];
-        const straitSet = new Set(allStraitTiles.map(t => `${t.row},${t.col}`));
-        
-        while (queue.length > 0 && region.length < 5) {
-            const current = queue.shift()!;
-            const key = `${current.row},${current.col}`;
-            
-            if (visitedStrait.has(key)) continue;
-            visitedStrait.add(key);
-            region.push(current);
-            
-            // Find adjacent strait tiles in a straight line
-            const neighbors = getHexNeighbors(map, current.row, current.col, height, width)
-                .filter(n => straitSet.has(`${n.row},${n.col}`))
-                .filter(n => !visitedStrait.has(`${n.row},${n.col}`));
-            
-            // Add neighbors (should maintain linearity)
-            for (const neighbor of neighbors.slice(0, 2)) { // Max 2 neighbors for linearity
-                queue.push(neighbor);
-            }
-        }
-        
-        return region;
-    };
-
-    const floodFillAndClassify = (startRow: number, startCol: number, isLand: boolean): GeographicRegion | null => {
+    const floodFillAndClassify = (startRow: number, startCol: number, isLand: boolean, regionType?: GeographicRegion['type'], targetLandRegionId?: number): GeographicRegion | null => {
         const queue: Array<{ row: number; col: number }> = [{ row: startRow, col: startCol }];
         const tiles: Array<{ row: number; col: number }> = [];
         let totalElevation = 0;
@@ -340,6 +115,21 @@ export function identifyGeographicRegions(map: Map): void {
             
             const tileIsLand = isLandTile(map[row][col]);
             if (tileIsLand !== isLand) continue;
+
+            // For coastal waters, check distance, depth, AND land region requirements
+            if (regionType === 'coastal-waters') {
+                const distanceFromLand = getDistanceFromLand(row, col);
+                const tileAltitude = map[row][col].altitude;
+                const closestLandRegion = getClosestLandRegion(row, col);
+                
+                // Coastal waters must be within 4 tiles of land AND between 0 and -0.4 altitude AND belong to the target land region
+                if (distanceFromLand > 4 || 
+                    tileAltitude < -0.4 || 
+                    tileAltitude > 0 || 
+                    closestLandRegion !== targetLandRegionId) {
+                    continue;
+                }
+            }
 
             visited.add(key);
             tiles.push({ row, col });
@@ -376,31 +166,37 @@ export function identifyGeographicRegions(map: Map): void {
         if (isLand) {
             if (size > totalTiles * 0.15) {
                 type = 'continent';
-                name = `Continent ${Math.floor(currentRegionId / 2) + 1}`;
+                name = `Continent ${currentRegionId + 1}`;
             } else if (size > totalTiles * 0.02) {
                 type = 'island';
-                name = `Island ${Math.floor(currentRegionId / 2) + 1}`;
+                name = `Island ${currentRegionId + 1}`;
             } else {
                 type = 'archipelago';
-                name = `Archipelago ${Math.floor(currentRegionId / 2) + 1}`;
+                name = `Archipelago ${currentRegionId + 1}`;
             }
         } else {
-            // Water classification
-            const avgDepth = totalDepth / size;
-            const enclosed = isEnclosedByLand(tiles);
-            
-            if (enclosed && avgDepth < 0.4 && size < totalTiles * 0.03) {
-                type = 'bay';
-                name = `Bay ${Math.floor(currentRegionId / 2) + 1}`;
-            } else if (enclosed && size < totalTiles * 0.15) {
-                type = 'sea';
-                name = `Sea ${Math.floor(currentRegionId / 2) + 1}`;
-            } else if (size > totalTiles * 0.2) {
-                type = 'ocean';
-                name = `Ocean ${Math.floor(currentRegionId / 2) + 1}`;
+            // Use pre-defined type for coastal waters, otherwise classify normally
+            if (regionType === 'coastal-waters') {
+                type = 'coastal-waters';
+                name = `Coastal Waters ${targetLandRegionId! + 1}`;
             } else {
-                type = 'sea';
-                name = `Sea ${Math.floor(currentRegionId / 2) + 1}`;
+                // Water classification for remaining water regions
+                const avgDepth = totalDepth / size;
+                const enclosed = isEnclosedByLand(tiles);
+                
+                if (enclosed && avgDepth < 0.4 && size < totalTiles * 0.03) {
+                    type = 'bay';
+                    name = `Bay ${currentRegionId + 1}`;
+                } else if (enclosed && size < totalTiles * 0.15) {
+                    type = 'sea';
+                    name = `Sea ${currentRegionId + 1}`;
+                } else if (size > totalTiles * 0.2) {
+                    type = 'ocean';
+                    name = `Ocean ${currentRegionId + 1}`;
+                } else {
+                    type = 'sea';
+                    name = `Sea ${currentRegionId + 1}`;
+                }
             }
         }
 
@@ -418,43 +214,95 @@ export function identifyGeographicRegions(map: Map): void {
             averageElevation: isLand ? totalElevation / size : undefined,
             averageDepth: !isLand ? totalDepth / size : undefined,
             distanceFromEdge: avgDistanceFromEdge,
-            isEnclosed: !isLand ? isEnclosedByLand(tiles) : undefined
+            isEnclosed: !isLand ? isEnclosedByLand(tiles) : undefined,
+            parentLandRegionId: regionType === 'coastal-waters' ? targetLandRegionId : undefined
         };
     };
 
-    // STEP 1: Identify strait tiles first (simple and fast)
-    console.log('Identifying strait tiles...');
-    const straitTiles = identifyStraitTiles();
-    const straitRegions = expandStraitRegions(straitTiles);
-    
-    // Mark strait tiles and create strait regions
-    straitRegions.forEach((straitRegion, index) => {
-        const straitId = currentRegionId++;
-        let totalDepth = 0;
-        let totalDistance = 0;
-        
-        for (const tile of straitRegion) {
-            visited.add(`${tile.row},${tile.col}`);
-            map[tile.row][tile.col].regionId = straitId;
-            map[tile.row][tile.col].regionType = 'strait';
-            totalDepth += Math.abs(Math.min(0, map[tile.row][tile.col].altitude));
-            totalDistance += getDistanceFromEdge(tile.row, tile.col);
+    // STEP 1: Process land regions first
+    console.log('Creating land regions...');
+    const landRegions: GeographicRegion[] = [];
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            const key = `${row},${col}`;
+            if (!visited.has(key) && isLandTile(map[row][col])) {
+                const region = floodFillAndClassify(row, col, true);
+                if (region) {
+                    regions.push(region);
+                    landRegions.push(region);
+                    currentRegionId++;
+                }
+            }
         }
+    }
+
+    // STEP 1.5: Now update the closest land region map using the actual region IDs
+    console.log('Updating closest land region assignments...');
+    const closestLandRegionQueue: Array<{ row: number; col: number; distance: number; landRegionId: number }> = [];
+    const closestLandRegionVisited = new Set<string>();
+    
+    // Initialize with all land tiles and their actual region IDs
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            if (isLandTile(map[row][col]) && map[row][col].regionId !== undefined) {
+                const key = `${row},${col}`;
+                const landRegionId = map[row][col].regionId!;
+                closestLandRegionQueue.push({ row, col, distance: 0, landRegionId });
+                closestLandRegionVisited.add(key);
+                closestLandRegionMap.set(key, landRegionId);
+            }
+        }
+    }
+    
+    // BFS to assign closest land region to all water tiles
+    while (closestLandRegionQueue.length > 0) {
+        const current = closestLandRegionQueue.shift();
+        if (!current) continue;
         
-        regions.push({
-            id: straitId,
-            type: 'strait',
-            name: `Strait ${index + 1}`,
-            tiles: straitRegion,
-            size: straitRegion.length,
-            averageDepth: totalDepth / straitRegion.length,
-            distanceFromEdge: totalDistance / straitRegion.length
-        });
-    });
+        const { row, col, distance, landRegionId } = current;
+        
+        const neighbors = getHexNeighbors(map, row, col, height, width);
+        for (const neighbor of neighbors) {
+            const neighborKey = `${neighbor.row},${neighbor.col}`;
+            if (!closestLandRegionVisited.has(neighborKey)) {
+                closestLandRegionVisited.add(neighborKey);
+                const newDistance = distance + 1;
+                closestLandRegionMap.set(neighborKey, landRegionId);
+                closestLandRegionQueue.push({ row: neighbor.row, col: neighbor.col, distance: newDistance, landRegionId });
+            }
+        }
+    }
 
-    console.log(`Identified ${straitRegions.length} strait regions with ${straitTiles.length} total strait tiles`);
+    // STEP 2: Create coastal waters for each land region separately
+    console.log('Creating coastal water regions for each land region...');
+    for (const landRegion of landRegions) {
+        console.log(`Creating coastal waters for ${landRegion.name}...`);
+        
+        // Find all coastal water candidates for this specific land region
+        for (let row = 0; row < height; row++) {
+            for (let col = 0; col < width; col++) {
+                const key = `${row},${col}`;
+                const tile = map[row][col];
+                
+                if (!visited.has(key) && 
+                    !isLandTile(tile) && 
+                    getDistanceFromLand(row, col) <= 4 && 
+                    tile.altitude >= -0.4 && 
+                    tile.altitude <= 0 &&
+                    getClosestLandRegion(row, col) === landRegion.id) {
+                    
+                    const region = floodFillAndClassify(row, col, false, 'coastal-waters', landRegion.id);
+                    if (region) {
+                        regions.push(region);
+                        currentRegionId++;
+                    }
+                }
+            }
+        }
+    }
 
-    // STEP 2: Process remaining water regions (excluding strait tiles)
+    // STEP 3: Process remaining water regions (deeper waters)
+    console.log('Creating deep water regions...');
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const key = `${row},${col}`;
@@ -468,28 +316,15 @@ export function identifyGeographicRegions(map: Map): void {
         }
     }
 
-    // STEP 3: Process land regions
-    for (let row = 0; row < height; row++) {
-        for (let col = 0; col < width; col++) {
-            const key = `${row},${col}`;
-            if (!visited.has(key) && isLandTile(map[row][col])) {
-                const region = floodFillAndClassify(row, col, true);
-                if (region) {
-                    regions.push(region);
-                    currentRegionId++;
-                }
-            }
-        }
-    }
-
     console.log(`Identified ${regions.length} geographic regions:`);
     regions.forEach(r => {
         const enclosedText = r.isEnclosed !== undefined ? (r.isEnclosed ? ' (enclosed)' : ' (open)') : '';
-        console.log(`- ${r.name} (${r.type}): ${r.size} tiles (${((r.size / (width * height)) * 100).toFixed(1)}% of map)${enclosedText}`);
+        const landRegionText = r.parentLandRegionId !== undefined ? ` (land region ${r.parentLandRegionId})` : '';
+        console.log(`- ${r.name} (${r.type}): ${r.size} tiles (${((r.size / (width * height)) * 100).toFixed(1)}% of map)${enclosedText}${landRegionText}`);
     });
 }
 
-// Simple function to get region stats from tiles
+// Function to get region stats from tiles
 export function getGeographicRegionStats(map: Map): GeographicRegion[] {
     const height = map.length;
     const width = map[0].length;
@@ -570,8 +405,8 @@ export function getRegionColor(regionId: number, regionType: GeographicRegion['t
             return `hsl(${(baseHue + 200) % 360}, 60%, 35%)`;
         case 'bay':
             return `hsl(${(baseHue + 220) % 360}, 80%, 50%)`;
-        case 'strait':
-            return `hsl(${(baseHue + 180) % 360}, 100%, 70%)`;
+        case 'coastal-waters':
+            return `hsl(${(baseHue + 180) % 360}, 60%, 45%)`;
         default:
             return `hsl(${baseHue}, 60%, 50%)`;
     }
