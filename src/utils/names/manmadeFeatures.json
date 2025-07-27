@@ -1,0 +1,32 @@
+{
+    "cities": {
+        "prefixes": [
+            "Iron", "Gold", "Silver", "Crystal", "Storm", "Star", "Moon", "Sun", "Shadow", "Light", "Fire", "Ice", "Wind", "Stone", "Steel", "Ember", "Frost", "Dawn", "Dusk", "Night",
+            "Azure", "Ruby", "Emerald", "Obsidian", "Thunder", "Sky", "Mist", "Echo", "Blaze", "Titan", "Dragon", "Phoenix", "Specter", "Tempest", "Glacier"
+        ],
+        "suffixes": [
+            "spire", "hold", "gate", "port", "reach", "fall", "vale", "moor", "haven", "forge", "crest", "heim", "burg", "ton", "stad", "keep", "watch", "guard", "crown", "throne",
+            "bastion", "citadel", "tower", "arch", "ward", "cliff", "bridge", "plaza", "circle", "court", "hall", "pillar", "vault"
+        ]
+    },
+    "towns": {
+        "prefixes": [
+            "Oak", "Pine", "Maple", "Birch", "Elm", "Ash", "Willow", "Cedar", "Fir", "Spruce", "Hazel", "Thorn", "Briar", "Rose", "Ivy", "Moss", "Fern", "Heath", "Meadow", "Hill",
+            "Beech", "Rowan", "Chestnut", "Laurel", "Sycamore", "Juniper", "Poplar", "Alder", "Holly", "Yew", "Sage", "Bracken", "Reed"
+        ],
+        "suffixes": [
+            "wood", "grove", "field", "brook", "mere", "ford", "glen", "dale", "ridge", "hollow", "ton", "ham", "wick", "by", "thorpe", "stead", "hurst", "leigh", "burn",
+            "cross", "mill", "pond", "lane", "mead", "park", "way", "row", "gate", "edge"
+        ]
+    },
+    "villages": {
+        "prefixes": [
+            "Pebble", "Bramble", "Fox", "Wren", "Lark", "Sparrow", "Clover", "Daisy", "Poppy", "Lily", "Violet", "Heather", "Lavender", "Honey", "Sweet", "Wild", "Dew",
+            "Moth", "Mouse", "Robin", "Finch", "Butter", "Berry", "Twig", "Brook", "Fern", "Mossy", "Thistle", "Acorn"
+        ],
+        "suffixes": [
+            "shade", "glove", "root", "spur", "point", "run", "bend", "top", "mead", "side", "bank",
+            "nest", "patch", "fold", "nook", "lane", "walk", "end", "hill", "edge", "way"
+        ]
+    }
+}

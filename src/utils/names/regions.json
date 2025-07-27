@@ -1,0 +1,61 @@
+{
+  "Continents": {
+    "prefixes": [
+      "Zar", "Lun", "Vesp", "Sol", "Eld", "Myth", "Thal", "Cyr", "Or", "Pyr", "Aur", "Drak", "Sylph", "Valk", "Nym", "Xand", "Feyl", "Quor", "Tir", "Mord",
+      "Gal", "Ryn", "Vorn", "Astra", "Lyra", "Dusk", "Bran", "Seren", "Vara", "Karn"
+    ],
+    "suffixes": [
+      "ath", "ara", "era", "oria", "ra", "alis", "inth", "ris", "elia", "ira", "ria", "orn", "in",
+      "os", "ium", "arae", "on", "en", "ar", "is", "or", "ium"
+    ],
+    "coastalSuffixes": [
+      "ian waters", "an waters", "erian waters", "aran waters", "orian waters", "ran waters", "alisan waters", "inthian waters", "risan waters", "elian waters", "arian waters", "iran waters", "rian waters", "ornian waters", "inian waters", "athian waters",
+      "osian waters", "iumian waters", "araean waters", "onian waters"
+    ]
+  },
+  "Islands": {
+    "prefixes": [
+      "Ast", "Vir", "Kor", "Lir", "Zyr", "Nir", "Tir", "Sor", "Pyr", "Mir", "Dar", "Fir", "Gir", "Hir", "Jir", "Kir", "Lor", "Mor", "Nor", "Pir",
+      "Bar", "Sar", "Tor", "Zar", "Yar", "Xir", "Qir", "Wyr", "Cir", "Dir"
+    ],
+    "suffixes": [
+      "a", "os", "isle", "en", "on", "in", "ar", "or"
+    ]
+  },
+  "Archipelagos": {
+    "prefixes": [
+      "Vesper", "Thalor", "Sylph", "Drakar", "Aurelian", "Feylorn", "Quorin", "Tirath", "Mordalis", "Xandrian",
+      "Galoran", "Rynath", "Vornis", "Astralis", "Lyrian"
+    ],
+    "suffixes": [
+      "Isles", "Chain", "Archipelago", "Cluster", "Group", "Spray"
+    ]
+  },
+  "Oceans": {
+    "prefixes": [
+      "Azure", "Crimson", "Emerald", "Obsidian", "Celestial", "Sable", "Radiant", "Tempest", "Eclipse", "Seraphic", "Mystic", "Vortex", "Aurora", "Spectral", "Titan", "Phantom", "Echo", "Storm", "Shadow", "Glacial",
+      "Twilight", "Solar", "Lunar", "Nebula", "Frost", "Infernal"
+    ],
+    "suffixes": [
+      "Ocean", "Expanse", "Deep", "Waters"
+    ]
+  },
+  "Seas": {
+    "prefixes": [
+      "Opal", "Jade", "Ruby", "Sapphire", "Topaz", "Amber", "Onyx", "Pearl", "Quartz", "Garnet", "Amethyst", "Diamond", "Obsidian", "Turquoise", "Citrine", "Moonstone", "Sunstone", "Crystal", "Meteor", "Starlight",
+      "Coral", "Mist", "Echo", "Frost", "Solar", "Lunar"
+    ],
+    "suffixes": [
+      "Sea", "Basin", "Reach", "Current"
+    ]
+  },
+  "Bays": {
+    "prefixes": [
+      "Silver", "Golden", "Emerald", "Azure", "Crimson", "Obsidian", "Pearl", "Jade", "Ruby", "Sapphire", "Topaz", "Amber", "Onyx", "Quartz", "Garnet", "Amethyst", "Diamond", "Turquoise", "Citrine", "Moonstone",
+      "Coral", "Mist", "Echo", "Frost", "Solar", "Lunar"
+    ],
+    "suffixes": [
+      "Bay", "Cove", "Inlet", "Harbor"
+    ]
+  }
+}

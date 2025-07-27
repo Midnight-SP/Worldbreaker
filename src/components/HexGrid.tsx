@@ -24,7 +24,7 @@ const HexGrid: React.FC<HexGridProps> = ({
 
     // Define natural and manmade features
     const naturalFeatures = ['source', 'lake', 'river', 'volcano'];
-    const manmadeFeatures = ['village', 'city'];
+    const manmadeFeatures = ['village', 'town', 'city'];
 
     // Helper function to check if a feature should be shown
     const shouldShowFeature = (feature: string): boolean => {
@@ -40,6 +40,53 @@ const HexGrid: React.FC<HexGridProps> = ({
     // Helper function to get filtered features for tooltip
     const getVisibleFeatures = (features: string[]): string[] => {
         return features.filter(feature => shouldShowFeature(feature));
+    };
+
+    // Helper function to get feature names
+    const getFeatureNames = (tile: Tile): string[] => {
+        const featureNames: string[] = [];
+        
+        // Check each feature and add its name if it exists
+        if (tile.features.includes('source') && tile.sourceName) {
+            featureNames.push(`Source: ${tile.sourceName}`);
+        }
+        if (tile.features.includes('river') && tile.riverName) {
+            featureNames.push(`River: ${tile.riverName}`);
+        }
+        if (tile.features.includes('lake') && tile.lakeName) {
+            featureNames.push(`Lake: ${tile.lakeName}`);
+        }
+        if (tile.features.includes('volcano') && tile.volcanoName) {
+            featureNames.push(`Volcano: ${tile.volcanoName}`);
+        }
+        if (tile.features.includes('village') && tile.villageName) {
+            featureNames.push(`Village: ${tile.villageName}`);
+        }
+        if (tile.features.includes('town') && tile.townName) {
+            featureNames.push(`Town: ${tile.townName}`);
+        }
+        if (tile.features.includes('city') && tile.cityName) {
+            featureNames.push(`City: ${tile.cityName}`);
+        }
+        
+        // Add unnamed features
+        const unnamedFeatures = tile.features.filter(feature => {
+            const hasName = 
+                (feature === 'source' && tile.sourceName) ||
+                (feature === 'river' && tile.riverName) ||
+                (feature === 'lake' && tile.lakeName) ||
+                (feature === 'volcano' && tile.volcanoName) ||
+                (feature === 'village' && tile.villageName) ||
+                (feature === 'town' && tile.townName) ||
+                (feature === 'city' && tile.cityName);
+            return !hasName;
+        });
+        
+        if (unnamedFeatures.length > 0) {
+            featureNames.push(...unnamedFeatures.map(f => f.charAt(0).toUpperCase() + f.slice(1)));
+        }
+        
+        return featureNames;
     };
 
     const getHexCenter = (row: number, col: number): [number, number] => {
@@ -100,33 +147,38 @@ const HexGrid: React.FC<HexGridProps> = ({
                 {map.map((row: Tile[], rowIndex: number) =>
                     row.map((tile: Tile, colIndex: number) => {
                         const [x, y] = getHexCenter(rowIndex, colIndex);
-                        
+
                         // Get visible features for tooltip
                         const visibleFeatures = getVisibleFeatures(tile.features);
+                        
+                        // Get feature names
+                        const featureNames = getFeatureNames(tile);
 
                         // Get geographic region info for tooltip
                         let regionInfo = '';
-                        if (visualizationType === 'geographic-regions') {
-                            if (tile.regionId !== undefined && tile.regionType) {
-                                regionInfo = `${tile.regionType}: Region ${tile.regionId}`;
-                            } else {
-                                regionInfo = 'Unassigned Region';
-                            }
+                        if (tile.regionId !== undefined && tile.regionType && tile.regionName) {
+                            regionInfo = `${tile.regionName}`;
+                        } else if (tile.regionId !== undefined && tile.regionType) {
+                            regionInfo = `${tile.regionType.charAt(0).toUpperCase() + tile.regionType.slice(1)} ${tile.regionId}`;
+                        } else {
+                            regionInfo = 'Unassigned Region';
                         }
 
-                        // Build the tooltip description
-                        const tileDescription = `Coordinates: (${colIndex}, ${rowIndex})
-                        Plate: ${tile.plate}
-                        Altitude: ${tile.altitude.toFixed(2)}
-                        Temperature: ${tile.temperature.toFixed(2)}
-                        Humidity: ${tile.humidity.toFixed(2)}
-                        Vegetation: ${tile.vegetation.toFixed(2)}
-                        Habitability: ${tile.habitability.toFixed(2)}
-                        Latitude: ${tile.latitude.toFixed(2)}
-                        Biome: ${tile.terrain.replace(/-/g, ' ')}
-                        Climate: ${tile.climateZone}
-                        Region: ${tile.regionType}
-                        ${visibleFeatures.length > 0 ? `Features: ${visibleFeatures.join(', ')}` : ''}`;
+                        // Get plate name
+                        const plateName = tile.plateName || `Plate ${tile.plate}`;
+
+                        // Build the tooltip description with names
+                        const tileDescription = `📍 Coordinates: (${colIndex}, ${rowIndex})
+🏔️ Plate: ${plateName}
+🌍 Region: ${regionInfo}
+⛰️ Altitude: ${tile.altitude.toFixed(2)}
+🌡️ Temperature: ${tile.temperature.toFixed(2)}
+💧 Humidity: ${tile.humidity.toFixed(2)}
+🌿 Vegetation: ${tile.vegetation.toFixed(2)}
+🏠 Habitability: ${tile.habitability.toFixed(2)}
+🌐 Latitude: ${tile.latitude.toFixed(2)}
+🌱 Biome: ${tile.terrain.replace(/-/g, ' ')}
+🌤️ Climate: ${tile.climateZone}${featureNames.length > 0 ? `\n\n🏞️ Features:\n${featureNames.map(name => `• ${name}`).join('\n')}` : ''}`;
 
                         return (
                             <g key={`${rowIndex}-${colIndex}`}>
@@ -146,7 +198,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                                     onMouseLeave={() => setTooltip(null)}
                                 />
 
-                                {/* Feature rendering remains the same */}
+                                {/* Feature Icons */}
                                 {shouldShowFeature('source') && tile.features.includes('source') && (
                                     <image
                                         href="/icons/source-icon.svg"
@@ -194,6 +246,17 @@ const HexGrid: React.FC<HexGridProps> = ({
                                 {shouldShowFeature('village') && tile.features.includes('village') && (
                                     <image
                                         href="/icons/village-icon.svg"
+                                        x={x - hexWidth / 4}
+                                        y={y - hexHeight / 4}
+                                        width={hexWidth / 2}
+                                        height={hexHeight / 2}
+                                        onMouseEnter={() => setTooltip(tileDescription)}
+                                        onMouseLeave={() => setTooltip(null)}
+                                    />
+                                )}
+                                {shouldShowFeature('town') && tile.features.includes('town') && (
+                                    <image
+                                        href="/icons/town-icon.svg"
                                         x={x - hexWidth / 4}
                                         y={y - hexHeight / 4}
                                         width={hexWidth / 2}

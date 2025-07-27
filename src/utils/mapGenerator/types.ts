@@ -11,6 +11,16 @@ export type Tile = {
     climateZone: string;
     regionId?: number;
     regionType?: 'continent' | 'island' | 'archipelago' | 'ocean' | 'sea' | 'coastal-waters' | 'bay';
+
+    regionName?: string;
+    plateName?: string;
+    cityName?: string;
+    townName?: string;
+    villageName?: string;
+    lakeName?: string;
+    riverName?: string;
+    sourceName?: string;
+    volcanoName?: string;
 };
 
 export type Map = Tile[][];

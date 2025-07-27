@@ -1,6 +1,7 @@
 import type { Map } from './types';
 import { getHexNeighbors } from './hexNeighbors';
 import { oceanBiomes } from './biomes';
+import { NameGenerator } from './nameGenerator';
 
 export interface GeographicRegion {
     id: number;
@@ -16,12 +17,15 @@ export interface GeographicRegion {
     parentLandRegionId?: number; // NEW: Track which land region this coastal water belongs to
 }
 
-export function identifyGeographicRegions(map: Map): void {
+export function identifyGeographicRegions(map: Map, seed: string): void {
     const height = map.length;
     const width = map[0].length;
     const visited = new Set<string>();
     let currentRegionId = 0;
     const regions: GeographicRegion[] = [];
+    
+    // Create name generator with the same seed (not seed + 'names')
+    const nameGenerator = new NameGenerator(seed);
 
     // Helper function to check if a tile is land
     const isLandTile = (tile: Map[0][0]): boolean => {
@@ -96,7 +100,7 @@ export function identifyGeographicRegions(map: Map): void {
         return closestLandRegionMap.get(`${row},${col}`);
     };
 
-    const floodFillAndClassify = (startRow: number, startCol: number, isLand: boolean, regionType?: GeographicRegion['type'], targetLandRegionId?: number): GeographicRegion | null => {
+    const floodFillAndClassify = (startRow: number, startCol: number, isLand: boolean, regionType?: GeographicRegion['type'], targetLandRegionId?: number, parentLandRegionName?: string): GeographicRegion | null => {
         const queue: Array<{ row: number; col: number }> = [{ row: startRow, col: startCol }];
         const tiles: Array<{ row: number; col: number }> = [];
         let totalElevation = 0;
@@ -166,19 +170,20 @@ export function identifyGeographicRegions(map: Map): void {
         if (isLand) {
             if (size > totalTiles * 0.15) {
                 type = 'continent';
-                name = `Continent ${currentRegionId + 1}`;
+                name = nameGenerator.getRegionName('continent');
             } else if (size > totalTiles * 0.02) {
                 type = 'island';
-                name = `Island ${currentRegionId + 1}`;
+                name = nameGenerator.getRegionName('island');
             } else {
                 type = 'archipelago';
-                name = `Archipelago ${currentRegionId + 1}`;
+                name = nameGenerator.getRegionName('archipelago');
             }
         } else {
             // Use pre-defined type for coastal waters, otherwise classify normally
             if (regionType === 'coastal-waters') {
                 type = 'coastal-waters';
-                name = `Coastal Waters ${targetLandRegionId! + 1}`;
+                // Coastal waters are tied to their parent land region
+                name = nameGenerator.getCoastalWatersName(parentLandRegionName || 'Unknown Land');
             } else {
                 // Water classification for remaining water regions
                 const avgDepth = totalDepth / size;
@@ -186,23 +191,24 @@ export function identifyGeographicRegions(map: Map): void {
                 
                 if (enclosed && avgDepth < 0.4 && size < totalTiles * 0.03) {
                     type = 'bay';
-                    name = `Bay ${currentRegionId + 1}`;
+                    name = nameGenerator.getRegionName('bay');
                 } else if (enclosed && size < totalTiles * 0.15) {
                     type = 'sea';
-                    name = `Sea ${currentRegionId + 1}`;
+                    name = nameGenerator.getRegionName('sea');
                 } else if (size > totalTiles * 0.2) {
                     type = 'ocean';
-                    name = `Ocean ${currentRegionId + 1}`;
+                    name = nameGenerator.getRegionName('ocean');
                 } else {
                     type = 'sea';
-                    name = `Sea ${currentRegionId + 1}`;
+                    name = nameGenerator.getRegionName('sea');
                 }
             }
         }
 
-        // Set region type directly on all tiles
+        // Set region type and name directly on all tiles
         for (const tile of tiles) {
             map[tile.row][tile.col].regionType = type;
+            map[tile.row][tile.col].regionName = name;
         }
 
         return {
@@ -291,7 +297,8 @@ export function identifyGeographicRegions(map: Map): void {
                     tile.altitude <= 0 &&
                     getClosestLandRegion(row, col) === landRegion.id) {
                     
-                    const region = floodFillAndClassify(row, col, false, 'coastal-waters', landRegion.id);
+                    // Pass the parent land region name for coastal waters naming
+                    const region = floodFillAndClassify(row, col, false, 'coastal-waters', landRegion.id, landRegion.name);
                     if (region) {
                         regions.push(region);
                         currentRegionId++;

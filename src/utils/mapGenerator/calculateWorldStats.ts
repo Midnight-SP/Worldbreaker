@@ -14,6 +14,7 @@ export const calculateWorldStats = (map: Map) => {
     let lakeCount = 0;
     let volcanoCount = 0;
     let villageCount = 0;
+    let townCount = 0;
     let cityCount = 0;
     const landBiomeCounts: Record<string, number> = {};
     const oceanBiomeCounts: Record<string, number> = {};
@@ -39,6 +40,7 @@ export const calculateWorldStats = (map: Map) => {
             if (tile.features.includes('lake')) lakeCount++;
             if (tile.features.includes('volcano')) volcanoCount++;
             if (tile.features.includes('village')) villageCount++;
+            if (tile.features.includes('town')) townCount++;
             if (tile.features.includes('city')) cityCount++;
         });
     });
@@ -89,6 +91,7 @@ export const calculateWorldStats = (map: Map) => {
         lakeCount,
         volcanoCount,
         villageCount,
+        townCount,
         cityCount,
         topLandBiomes,
         topOceanBiomes,

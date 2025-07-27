@@ -376,6 +376,10 @@ const App: React.FC = () => {
                                             <p>{calculateWorldStats(map).villageCount}</p>
                                         </div>
                                         <div className="info-item">
+                                            <label>Towns</label>
+                                            <p>{calculateWorldStats(map).townCount}</p>
+                                        </div>
+                                        <div className="info-item">
                                             <label>Cities</label>
                                             <p>{calculateWorldStats(map).cityCount}</p>
                                         </div>

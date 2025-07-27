@@ -11,6 +11,7 @@ import { adjustVegetationBasedOnWater, findNearestWaterDistance } from './vegeta
 import seedrandom from 'seedrandom';
 import { Map } from './types';
 import { identifyGeographicRegions } from './geographicRegions';
+import { NameGenerator } from './nameGenerator';
 
 
 export async function generateMap(
@@ -23,6 +24,9 @@ export async function generateMap(
     // Use provided seed or generate a random one
     const masterSeed = inputSeed || Date.now().toString();
     console.log(`Using seed: ${masterSeed}`);
+
+    // Create name generator with the master seed
+    const nameGenerator = new NameGenerator(masterSeed);
 
     // Create a master random number generator
     const masterRng = seedrandom(masterSeed);
@@ -38,10 +42,12 @@ export async function generateMap(
     let plateMap = assignPlatesUsingVoronoi(width, height, plates, masterRng);
     plateMap = distortPlateBoundaries(plateMap, width, height, masterRng);
 
+    // Create plate centers with names
     const plateCenters = Array.from({ length: plates }, (_, i) => ({
         x: Math.floor(masterRng() * width),
         y: Math.floor(masterRng() * height),
         drift: driftDirections[Math.floor(masterRng() * driftDirections.length)],
+        name: nameGenerator.getPlateName(),
     }));
 
     // Calculate plate sizes
@@ -119,7 +125,7 @@ export async function generateMap(
         }
     }
 
-    // Lower the altitude of tiles near the edges to create oceans
+    // MOVED: Lower the altitude of tiles near the edges to create oceans BEFORE source assignment
     const borderWidth = Math.min(width, height) * 0.1; // 10% of the smaller dimension
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
@@ -131,16 +137,17 @@ export async function generateMap(
             );
 
             if (distanceToEdge < borderWidth) {
-                const factor = borderWidth > 0 ? distanceToEdge / borderWidth : 0; // Avoid division by zero
-                map[row][col].altitude = Math.max(-1, map[row][col].altitude * factor - (1 - factor)); // Lower altitude
+                const factor = borderWidth > 0 ? distanceToEdge / borderWidth : 0;
+                map[row][col].altitude = Math.max(-1, map[row][col].altitude * factor - (1 - factor));
             }
         }
     }
 
-    // Assign plates to tiles
+    // Assign plates to tiles with names
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             map[row][col].plate = plateMap[row][col];
+            map[row][col].plateName = plateCenters[plateMap[row][col]].name;
         }
     }
 
@@ -153,7 +160,7 @@ export async function generateMap(
     const riverRng = seedrandom(masterSeed + 'rivers');
     const vegetationRng = seedrandom(masterSeed + 'vegetation');
 
-    // Randomly assign sources using seeded random
+    // MOVED: Randomly assign sources AFTER border ocean creation and with altitude check
     const sourceCount = Math.floor((width * height) / 100);
     let assignedSources = 0;
     const maxRetries = 1000;
@@ -162,17 +169,21 @@ export async function generateMap(
     while (assignedSources < sourceCount && retries < maxRetries) {
         const row = Math.floor(sourceRng() * height);
         const col = Math.floor(sourceRng() * width);
-    
+        const tile = map[row][col];
+        
         const neighbors = neighborsCache[`${row},${col}`];
     
         if (
-            !map[row][col].features.includes('source') &&
+            tile.altitude > 0 && // FIXED: Only place sources on land tiles (altitude > 0)
+            !tile.features.includes('source') &&
             !neighbors.some(neighbor =>
                 map[neighbor.row][neighbor.col].features.includes('source') ||
                 oceanBiomes.some(ocean => ocean.name === map[neighbor.row][neighbor.col].terrain)
             )
         ) {
-            map[row][col].features.push('source');
+            tile.features.push('source');
+            // NAME SOURCES with RIVER names since they will generate rivers
+            tile.sourceName = nameGenerator.getFeatureName('river');
             assignedSources++;
         }
     
@@ -181,6 +192,17 @@ export async function generateMap(
     
     if (retries >= maxRetries) {
         console.warn(`Source assignment stopped after ${maxRetries} retries. Assigned ${assignedSources} sources out of ${sourceCount}.`);
+    }
+
+    // Name volcanoes early too (before any processing that might reference them)
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            const tile = map[row][col];
+            
+            if (tile.features.includes('volcano')) {
+                tile.volcanoName = nameGenerator.getFeatureName('volcano');
+            }
+        }
     }
 
     console.log('Identifying plate boundaries...');
@@ -212,9 +234,15 @@ export async function generateMap(
                     (neighbor) => map[neighbor.row][neighbor.col].features.includes('river')
                 );
     
-                if (!hasNeighboringRiver) {
-                    tile.features = tile.features.filter(feature => feature !== 'source'); // Remove 'source'
+                // Only create lakes on LAND tiles (altitude > 0) - should already be guaranteed since sources are only on land
+                if (!hasNeighboringRiver && tile.altitude > 0) {
+                    tile.features = tile.features.filter(feature => feature !== 'source');
                     tile.features.push('lake');
+                    
+                    // Generate a proper lake name instead of using the river name
+                    tile.lakeName = nameGenerator.getFeatureName('lake');
+                    delete tile.sourceName;
+                    
                     console.log(`Source at (${row}, ${col}) turned into a lake because it doesn't neighbor any rivers.`);
                 }
             }
@@ -237,10 +265,21 @@ export async function generateMap(
                     oceanBiomes.some((ocean) => ocean.name === map[neighbor.row][neighbor.col].terrain)
                 );
     
-                if (!neighborsOceanBiome && hasNeighboringRiverOrSource) {
-                    tile.features.push('lake'); // Add 'lake' feature
+                // FIXED: Only create lakes on LAND tiles (altitude > 0) that don't neighbor ocean biomes
+                if (!neighborsOceanBiome && hasNeighboringRiverOrSource && tile.altitude > 0) {
+                    tile.features.push('lake');
+                    
+                    // Generate a proper lake name instead of using the river name
+                    tile.lakeName = nameGenerator.getFeatureName('lake');
                 }
             }
+        }
+    }
+
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            const tile = map[row][col];
+            tile.features = Array.from(new Set(tile.features));
         }
     }
 
@@ -270,60 +309,83 @@ export async function generateMap(
         }
     }
 
-    // Generate villages based on habitability
+    // Generate settlements with names (each type has its own table)
     let assignedVillages = 0;
+    let assignedTowns = 0;
+    let assignedCities = 0;
+
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
-            if (tile.altitude <= 0 || tile.features.includes('village')) continue;
-    
+            if (tile.altitude <= 0) continue;
+
             const neighbors = neighborsCache[`${row},${col}`];
-            const hasNeighboringVillage = neighbors.some(
-                neighbor => map[neighbor.row][neighbor.col].features.includes('village')
+            const hasNeighboringSettlement = neighbors.some(
+                neighbor => ['village', 'town', 'city'].some(f => map[neighbor.row][neighbor.col].features.includes(f))
             );
-    
-            const hasVillageInTwoTileRange = neighbors.some(neighbor => {
+
+            const hasSettlementInTwoTileRange = neighbors.some(neighbor => {
                 const secondLevelNeighbors = neighborsCache[`${neighbor.row},${neighbor.col}`];
                 return secondLevelNeighbors.some(
-                    secondNeighbor => map[secondNeighbor.row][secondNeighbor.col].features.includes('village')
+                    secondNeighbor => ['village', 'town', 'city'].some(f => map[secondNeighbor.row][secondNeighbor.col].features.includes(f))
                 );
             });
-    
-            if (!hasNeighboringVillage && !hasVillageInTwoTileRange && tile.habitability > 0.75) {
-                if (villageRng() < 0.5) {
-                    tile.features.push('village');
-                    assignedVillages++;
+
+            if (!hasNeighboringSettlement && !hasSettlementInTwoTileRange) {
+                if (tile.habitability > 0.85) {
+                    if (cityRng() < 0.5) {
+                        const cityName = nameGenerator.getSettlementName('city');
+                        tile.features.push('city');
+                        tile.cityName = cityName;
+                        assignedCities++;
+                    }
+                } else if (tile.habitability > 0.75) {
+                    if (villageRng() < 0.2) {
+                        const townName = nameGenerator.getSettlementName('town');
+                        tile.features.push('town');
+                        tile.townName = townName;
+                        assignedTowns++;
+                    }
+                } else if (tile.habitability > 0.65) {
+                    if (villageRng() < 0.1) {
+                        const villageName = nameGenerator.getSettlementName('village');
+                        tile.features.push('village');
+                        tile.villageName = villageName;
+                        assignedVillages++;
+                    }
                 }
             }
         }
     }
 
-    console.log(`Generated ${assignedVillages} villages.`);
-
-    // Convert villages with habitability > 0.9 into cities
-    let convertedCities = 0;
-
+    // Add names to remaining lakes (those not formed from sources/rivers)
+    // Remove the duplicate naming that was happening here
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
             const tile = map[row][col];
-
-            if (tile.features.includes('village') && tile.habitability >= 0.85) {
-                tile.features = tile.features.filter(feature => feature !== 'village'); // Remove 'village'
-                tile.features.push('city'); // Add 'city'
-                convertedCities++;
+            
+            // Only generate new lake names for lakes that don't already have names
+            if (tile.features.includes('lake') && !tile.lakeName) {
+                tile.lakeName = nameGenerator.getFeatureName('lake');
             }
+
+            if (tile.features.includes('volcano') && !tile.volcanoName) {
+                tile.volcanoName = nameGenerator.getFeatureName('volcano');
+            }
+            
+            // NOTE: Removed duplicate volcano and source naming since they're now named earlier
         }
     }
 
-    console.log(`Converted ${convertedCities} villages into cities.`);
+    console.log(`Generated ${assignedVillages} villages, ${assignedTowns} towns, and ${assignedCities} cities.`);
 
-    // Identify geographic regions (e.g., continents, islands)
+    // Identify geographic regions with names
     console.log('Identifying geographic regions...');
-    identifyGeographicRegions(map);
+    identifyGeographicRegions(map, masterSeed);
     console.log('Geographic regions identified.');
 
     return { 
         map, 
-        seed: masterSeed // Return the seed that was actually used
+        seed: masterSeed
     };
 }

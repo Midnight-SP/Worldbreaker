@@ -1,0 +1,32 @@
+{
+    "lakes": {
+        "prefixes": [
+            "Mirror", "Silver", "Crystal", "Shadow", "Moon", "Star", "Frost", "Ember", "Wind", "Storm", "Dawn", "Dusk", "Iron", "Bright", "Deep", "Hollow", "Willow", "Mist", "Sun", "Snow",
+            "Azure", "Golden", "Echo", "Twilight", "Serene", "Glacier", "Emerald", "Obsidian", "Silent", "Shimmer", "Cobalt", "Amber", "Sable", "Opal", "Verdant"
+        ],
+        "suffixes": [
+            "lake", "mere", "water", "pool", "tarn", "pond", "basin", "deep", "well", "spring", "glen", "vale", "hollow", "rest", "fall", "run", "bend", "flow", "brook", "stream",
+            "lagoon", "bay", "inlet", "cove", "reach", "haven", "marsh", "delta", "shoal", "firth", "loch", "fount", "grove"
+        ]
+    },
+    "rivers": {
+        "prefixes": [
+            "Elder", "Shadow", "Frost", "Sun", "Whisper", "Iron", "Mist", "Star", "Ember", "Willow", "Crystal", "Hollow", "Silver", "Moon", "Bright", "Storm", "Dusk", "Wind", "Deep", "Dawn",
+            "Azure", "Golden", "Echo", "Twilight", "Serene", "Glacier", "Emerald", "Obsidian", "Silent", "Shimmer", "Cobalt", "Amber", "Sable", "Opal", "Verdant"
+        ],
+        "suffixes": [
+            "river", "brook", "stream", "flow", "water", "run", "bend", "current", "branch", "trail", "fall", "rush", "thread",
+            "course", "channel", "creek", "fork", "passage", "drift", "rill", "cascade", "torrent", "wash", "outlet"
+        ]
+    },
+    "volcanoes": {
+        "prefixes": [
+            "Fire", "Ash", "Storm", "Ember", "Veil", "Dusk", "Iron", "Shadow", "Frost", "Star", "Hollow", "Sun", "Crystal", "Wind", "Bright", "Moon", "Silver", "Mist", "Dawn", "Deep",
+            "Blaze", "Inferno", "Obsidian", "Scarlet", "Thunder", "Pyre", "Cinder", "Sable", "Echo", "Twilight", "Amber", "Shimmer", "Cobalt", "Verdant"
+        ],
+        "suffixes": [
+            "peak", "mount", "spire", "crest", "forge", "flame", "fire", "burn", "blaze", "crag", "top", "crown", "point", "ridge",
+            "summit", "cone", "dome", "pinnacle", "butte", "caldera", "horn", "pillar", "height", "rise"
+        ]
+    }
+}

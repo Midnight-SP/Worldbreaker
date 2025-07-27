@@ -6,16 +6,17 @@ export function generateRivers(
     map: Map,
     riverCount: number,
     rng: () => number
-): Array<{ start: [number, number]; end: [number, number]; width: number }> {
+): Array<{ start: [number, number]; end: [number, number]; width: number; sourceName?: string }> {
     const height = map.length;
     const width = map[0].length;
-    const riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number }> = [];
+    const riverPaths: Array<{ start: [number, number]; end: [number, number]; width: number; sourceName?: string }> = [];
 
     let sourcesUsed = 0;
 
     for (let i = 0; i < riverCount; i++) {
         let row: number;
         let col: number;
+        let sourceName: string | undefined;
 
         // Find the next unused source
         const sourceTiles = [];
@@ -31,12 +32,13 @@ export function generateRivers(
             const randomSource = sourceTiles[Math.floor(rng() * sourceTiles.length)];
             row = randomSource.row;
             col = randomSource.col;
+            sourceName = map[row][col].sourceName; // Get the source's name
         } else {
             console.warn(`No valid sources found for river ${i + 1}.`);
             continue; // Skip to the next river if no sources are available
         }
 
-        console.log(`Starting river ${i + 1} at (${row}, ${col})`);
+        console.log(`Starting river ${i + 1} at (${row}, ${col}) with name: ${sourceName}`);
 
         let previousTile = { row, col };
         let currentWidth = 1; // Initial river width
@@ -68,6 +70,11 @@ export function generateRivers(
             }
 
             map[row][col].features.push('river'); // Mark the tile as having a river
+            
+            // Assign the source name to the river tile
+            if (sourceName) {
+                map[row][col].riverName = sourceName;
+            }
 
             // Find the lowest neighboring tile using hexagonal neighbors
             const neighbors = getHexNeighbors(map, row, col, height, width);
@@ -92,6 +99,7 @@ export function generateRivers(
                 start: [previousTile.row, previousTile.col],
                 end: [nextTile.row, nextTile.col],
                 width: currentWidth,
+                sourceName: sourceName, // Include source name in path
             });
 
             // Update previousTile to the current tile
