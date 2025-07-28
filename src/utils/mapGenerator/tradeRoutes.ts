@@ -543,15 +543,15 @@ function isRouteViable(
     const totalImportance = fromImportance + toImportance;
     
     if (totalImportance >= 6) { // City to City
-        minTradeValue = 150;
-    } else if (totalImportance >= 5) { // City to Town
         minTradeValue = 100;
-    } else if (totalImportance >= 4) { // City to Village or Town to Town
+    } else if (totalImportance >= 5) { // City to Town
         minTradeValue = 60;
-    } else if (totalImportance >= 3) { // Town to Village
+    } else if (totalImportance >= 4) { // City to Village or Town to Town
         minTradeValue = 30;
-    } else { // Village to Village
+    } else if (totalImportance >= 3) { // Town to Village
         minTradeValue = 15;
+    } else { // Village to Village
+        minTradeValue = 5;
     }
     
     if (tradeValue < minTradeValue) {

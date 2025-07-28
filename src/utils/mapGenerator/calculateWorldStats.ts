@@ -18,9 +18,19 @@ export const calculateWorldStats = (map: Map) => {
     let cityCount = 0;
     const landBiomeCounts: Record<string, number> = {};
     const oceanBiomeCounts: Record<string, number> = {};
+    
+    // NEW: Trade route statistics
+    const allTradeRoutes: Array<{
+        from: { row: number; col: number; name: string; type: string };
+        to: { row: number; col: number; name: string; type: string };
+        distance: number;
+        routeType: string;
+        tradeValue: number;
+    }> = [];
+    const processedRoutes = new Set<string>();
 
-    map.forEach(row => {
-        row.forEach(tile => {
+    map.forEach((row, rowIndex) => {
+        row.forEach((tile, colIndex) => {
             totalAltitude += tile.altitude;
             totalTemperature += tile.temperature;
             totalHumidity += tile.humidity;
@@ -42,6 +52,61 @@ export const calculateWorldStats = (map: Map) => {
             if (tile.features.includes('village')) villageCount++;
             if (tile.features.includes('town')) townCount++;
             if (tile.features.includes('city')) cityCount++;
+
+            // NEW: Collect trade routes
+            if (tile.tradeRoutes && tile.tradeRoutes.length > 0) {
+                tile.tradeRoutes.forEach(route => {
+                    // Create a unique key for this route to avoid duplicates
+                    const routeKey = `${Math.min(route.from.row, route.to.row)}-${Math.min(route.from.col, route.to.col)}-${Math.max(route.from.row, route.to.row)}-${Math.max(route.from.col, route.to.col)}`;
+                    
+                    if (!processedRoutes.has(routeKey)) {
+                        processedRoutes.add(routeKey);
+                        
+                        // Get settlement names and types
+                        const fromTile = map[route.from.row][route.from.col];
+                        const toTile = map[route.to.row][route.to.col];
+                        
+                        const getSettlementInfo = (tile: any, row: number, col: number) => {
+                            let name = `(${col}, ${row})`;
+                            let type = 'settlement';
+                            
+                            if (tile.features.includes('city')) {
+                                type = 'city';
+                                name = tile.cityName || `City at (${col}, ${row})`;
+                            } else if (tile.features.includes('town')) {
+                                type = 'town';
+                                name = tile.townName || `Town at (${col}, ${row})`;
+                            } else if (tile.features.includes('village')) {
+                                type = 'village';
+                                name = tile.villageName || `Village at (${col}, ${row})`;
+                            }
+                            
+                            return { name, type };
+                        };
+                        
+                        const fromInfo = getSettlementInfo(fromTile, route.from.row, route.from.col);
+                        const toInfo = getSettlementInfo(toTile, route.to.row, route.to.col);
+                        
+                        allTradeRoutes.push({
+                            from: {
+                                row: route.from.row,
+                                col: route.from.col,
+                                name: fromInfo.name,
+                                type: fromInfo.type
+                            },
+                            to: {
+                                row: route.to.row,
+                                col: route.to.col,
+                                name: toInfo.name,
+                                type: toInfo.type
+                            },
+                            distance: route.distance,
+                            routeType: route.routeType,
+                            tradeValue: route.tradeValue
+                        });
+                    }
+                });
+            }
         });
     });
 
@@ -70,6 +135,11 @@ export const calculateWorldStats = (map: Map) => {
             percentage: ((count / totalTiles) * 100).toFixed(1),
         }));
 
+    // NEW: Get top 5 trade routes by value
+    const topTradeRoutes = allTradeRoutes
+        .sort((a, b) => b.tradeValue - a.tradeValue)
+        .slice(0, 5);
+
     // Get geographic regions information - much simpler now!
     const geographicRegions = getGeographicRegionStats(map);
     const continents = geographicRegions.filter(r => r.type === 'continent');
@@ -95,6 +165,8 @@ export const calculateWorldStats = (map: Map) => {
         cityCount,
         topLandBiomes,
         topOceanBiomes,
+        topTradeRoutes, // NEW: Add top trade routes
+        totalTradeRoutes: allTradeRoutes.length, // NEW: Add total count
         geographicRegionCount: geographicRegions.length,
         continentCount: continents.length,
         islandCount: islands.length,

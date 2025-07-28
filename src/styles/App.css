@@ -7,62 +7,7 @@ body {
     line-height: 1.6;
 }
 
-/* Header top section with title and toggle buttons - UPDATED */
-.header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    margin-bottom: 15px;
-    position: relative; /* Add relative positioning */
-}
-
-.header-top h1 {
-    margin: 0;
-    position: absolute; /* Position absolutely */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for true centering */
-    color: #76c7c0;
-    font-size: 2.2rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    font-weight: 300;
-    letter-spacing: 1px;
-    white-space: nowrap; /* Prevent text wrapping */
-}
-
-.header-buttons {
-    display: flex;
-    gap: 10px;
-    margin-left: auto; /* Push buttons to the right */
-    z-index: 1; /* Ensure buttons stay above title */
-}
-
-/* Toggle button styling */
-.toggle-button {
-    background: linear-gradient(135deg, #76c7c0 0%, #5ba8a0 100%);
-    border: none;
-    color: #1e1e2f;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(118, 199, 192, 0.3);
-    white-space: nowrap;
-}
-
-.toggle-button:hover {
-    background: linear-gradient(135deg, #5ba8a0 0%, #76c7c0 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(118, 199, 192, 0.4);
-}
-
-.toggle-button:active {
-    transform: translateY(0);
-}
-
-/* Header styling */
+/* Header styling - simplified */
 .header {
     position: fixed;
     top: 0;
@@ -71,54 +16,109 @@ body {
     background: linear-gradient(135deg, #2a2a3b 0%, #1e1e2f 100%);
     z-index: 1000;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    padding: 15px 0;
     transition: all 0.3s ease;
 }
 
-.header h1 {
-    text-align: center;
+.header-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.header-top h1 {
+    margin: 0;
     color: #76c7c0;
-    font-size: 2.2rem;
-    margin: 0 0 20px 0;
+    font-size: 1.8rem;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     font-weight: 300;
     letter-spacing: 1px;
+    text-align: center;
 }
 
-/* Controls section styling - redesigned layout */
-.controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+/* NEW: Tab Navigation */
+.tab-navigation {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-top: 1px solid rgba(118, 199, 192, 0.2);
+    background: rgba(30, 30, 47, 0.8);
+}
+
+.tab-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tab-group h3 {
+    margin: 0;
+    color: #76c7c0;
+    font-size: 0.9rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.tab-button {
+    background: rgba(118, 199, 192, 0.1);
+    border: 1px solid rgba(118, 199, 192, 0.3);
+    color: #f0f0f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab-button:hover {
+    background: rgba(118, 199, 192, 0.2);
+    border-color: rgba(118, 199, 192, 0.5);
+    transform: translateY(-1px);
+}
+
+.tab-button.active {
+    background: linear-gradient(135deg, #76c7c0 0%, #5ba8a0 100%);
+    color: #1e1e2f;
+    border-color: #76c7c0;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(118, 199, 192, 0.4);
+}
+
+/* NEW: Tab Content */
+.tab-content {
+    background: rgba(30, 30, 47, 0.95);
+    border-top: 1px solid rgba(118, 199, 192, 0.2);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.tab-panel {
     padding: 20px;
+}
+
+.panel-content {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Control groups */
-.control-group {
-    background-color: rgba(30, 30, 47, 0.8);
-    border: 1px solid #76c7c0;
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    min-width: 0; /* Allow shrinking */
-    overflow: hidden; /* Prevent content overflow */
+.control-section,
+.info-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    align-items: start;
 }
 
-.control-group h3 {
-    margin: 0 0 15px 0;
-    color: #76c7c0;
-    font-size: 1.1rem;
-    font-weight: 500;
-    text-align: center;
-    border-bottom: 1px solid rgba(118, 199, 192, 0.3);
-    padding-bottom: 8px;
-}
-
-/* Individual control styling */
+/* Control Items */
 .control-item {
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .control-item:last-child {
@@ -135,7 +135,7 @@ body {
 
 .control-item input,
 .control-item select {
-    width: calc(100% - 24px); /* Account for padding */
+    width: 100%;
     padding: 8px 12px;
     border: 1px solid #76c7c0;
     border-radius: 5px;
@@ -143,7 +143,7 @@ body {
     color: #f0f0f0;
     font-size: 0.9rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    box-sizing: border-box; /* Include padding and border in width */
+    box-sizing: border-box;
 }
 
 .control-item input:focus,
@@ -153,7 +153,7 @@ body {
     box-shadow: 0 0 5px rgba(118, 199, 192, 0.3);
 }
 
-/* Seed controls special styling */
+/* Seed controls */
 .seed-controls {
     display: flex;
     gap: 10px;
@@ -169,12 +169,6 @@ body {
     margin-bottom: 5px;
 }
 
-.seed-input-wrapper input {
-    width: calc(100% - 24px); /* Account for padding */
-    box-sizing: border-box; /* Include padding and border in width */
-}
-
-/* Generate button styling */
 .generate-button {
     background: linear-gradient(135deg, #76c7c0 0%, #5ba8a0 100%);
     border: none;
@@ -186,17 +180,14 @@ body {
     font-weight: 600;
     transition: all 0.2s ease;
     box-shadow: 0 3px 8px rgba(118, 199, 192, 0.3);
-    min-width: 120px;
+    min-width: 100px;
+    white-space: nowrap;
 }
 
 .generate-button:hover:not(:disabled) {
     background: linear-gradient(135deg, #5ba8a0 0%, #76c7c0 100%);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(118, 199, 192, 0.4);
-}
-
-.generate-button:active:not(:disabled) {
-    transform: translateY(0);
 }
 
 .generate-button:disabled {
@@ -206,7 +197,7 @@ body {
     box-shadow: none;
 }
 
-/* Seed display styling */
+/* Seed display */
 .seed-display {
     background-color: rgba(30, 30, 47, 0.9);
     border: 1px solid #76c7c0;
@@ -270,173 +261,102 @@ body {
     50% { opacity: 1; }
 }
 
-/* Checkbox styling - UPDATED for better spacing */
+/* Checkbox styling */
 .checkbox-container {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px; /* Add margin between checkboxes */
+    margin-bottom: 8px;
 }
 
 .checkbox-container:last-child {
-    margin-bottom: 0; /* Remove margin from last checkbox */
+    margin-bottom: 0;
 }
 
 .checkbox-container input[type="checkbox"] {
     width: auto;
     margin: 0;
-    accent-color: #76c7c0; /* Style the checkbox with theme color */
+    accent-color: #76c7c0;
 }
 
 .checkbox-container label {
-    font-size: 0.85rem; /* Slightly smaller font for checkboxes */
+    font-size: 0.85rem;
     color: #f0f0f0;
-    cursor: pointer; /* Make label clickable */
-    user-select: none; /* Prevent text selection */
+    cursor: pointer;
+    user-select: none;
 }
 
-/* Add hover effect for checkbox containers */
 .checkbox-container:hover label {
     color: #76c7c0;
     transition: color 0.2s ease;
 }
 
-/* Ensure proper spacing in the Display Options group */
-.control-group .control-item:has(.checkbox-container) {
-    margin-bottom: 8px; /* Consistent spacing for checkbox items */
-}
-
-/* World info styling */
-.world-info {
+/* Info Grid */
+.info-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Force 3 equal columns for first 3 sections */
-    grid-auto-rows: auto;
-    gap: 20px;
-    margin: 20px auto 0;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(42, 42, 59, 0.9) 0%, rgba(30, 30, 47, 0.9) 100%);
-    border: 1px solid #76c7c0;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    max-width: 1200px;
-    backdrop-filter: blur(5px);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
 }
 
-/* Info category styling */
-.info-category {
-    background-color: rgba(30, 30, 47, 0.8);
-    border: 1px solid rgba(118, 199, 192, 0.3);
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.info-category:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-    border-color: rgba(118, 199, 192, 0.5);
-}
-
-.info-category h4 {
-    margin: 0 0 12px 0;
-    color: #76c7c0;
-    font-size: 1rem;
-    font-weight: 600;
-    text-align: center;
-    border-bottom: 1px solid rgba(118, 199, 192, 0.3);
-    padding-bottom: 8px;
-}
-
-/* Update existing info-item styling */
 .info-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     background-color: rgba(30, 30, 47, 0.6);
-    padding: 8px;
-    border-radius: 6px;
+    padding: 12px;
+    border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(118, 199, 192, 0.15);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .info-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     border-color: rgba(118, 199, 192, 0.3);
 }
 
 .info-item label {
     font-weight: 600;
     color: #76c7c0;
-    margin-bottom: 4px;
-    font-size: 0.8rem;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
     text-align: center;
     text-transform: capitalize;
 }
 
 .info-item p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #f0f0f0;
     font-weight: 500;
+    text-align: center;
 }
 
-/* Update info-category-content grid for better spacing */
-.info-category-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-}
-
-/* Averages section - make items wider */
-.info-category:nth-child(1) .info-category-content {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-}
-
-/* Coverage section - make items wider */
-.info-category:nth-child(2) .info-category-content {
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-/* Features section - make items wider */
-.info-category:nth-child(3) .info-category-content {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-}
-
-/* Special styling for biomes category - spans full width */
-.info-category.biomes-category {
-    grid-column: 1 / -1; /* Span full width */
-}
-
+/* Biomes styling */
 .biomes-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px; /* Increase gap for better spacing */
+    gap: 30px;
 }
 
 .biome-section {
     background-color: rgba(30, 30, 47, 0.6);
     border: 1px solid rgba(118, 199, 192, 0.2);
-    border-radius: 8px;
-    padding: 15px; /* Increase padding for better appearance */
+    border-radius: 10px;
+    padding: 20px;
 }
 
 .biome-section h5 {
-    margin: 0 0 12px 0; /* Increase bottom margin */
+    margin: 0 0 15px 0;
     color: #76c7c0;
-    font-size: 1rem; /* Slightly larger font */
+    font-size: 1.1rem;
     font-weight: 600;
     text-align: center;
     border-bottom: 1px solid rgba(118, 199, 192, 0.2);
-    padding-bottom: 8px;
+    padding-bottom: 10px;
 }
 
-/* Update existing biome list styling */
 .biome-section .info-item.biome-list {
     background-color: transparent;
     padding: 0;
@@ -455,11 +375,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px; /* Increase padding for better spacing */
-    margin: 4px 0; /* Increase margin */
+    padding: 10px 15px;
+    margin: 5px 0;
     background-color: rgba(118, 199, 192, 0.1);
-    border-radius: 5px; /* Slightly larger border radius */
-    font-size: 0.8rem; /* Slightly larger font */
+    border-radius: 6px;
+    font-size: 0.9rem;
     transition: background-color 0.2s ease;
 }
 
@@ -467,124 +387,107 @@ body {
     background-color: rgba(118, 199, 192, 0.2);
 }
 
-/* Responsive design updates */
-@media (max-width: 768px) {
-    .world-info {
-        grid-template-columns: 1fr; /* Single column on mobile */
-        gap: 15px;
-        padding: 15px;
-    }
-
-    .info-category-content {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 8px;
-    }
-
-    /* Reset specific section styling on mobile */
-    .info-category:nth-child(1) .info-category-content,
-    .info-category:nth-child(2) .info-category-content,
-    .info-category:nth-child(3) .info-category-content {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 8px;
-    }
-
-    .info-category h4 {
-        font-size: 0.9rem;
-    }
-
-    .info-item label {
-        font-size: 0.75rem;
-    }
-
-    .info-item p {
-        font-size: 0.8rem;
-    }
-
-    .biomes-container {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .biome-section {
-        padding: 10px;
-    }
-
-    .biome-section h5 {
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-    }
-
-    .biome-section .info-item.biome-list ul li {
-        font-size: 0.75rem;
-        padding: 6px 8px;
-        margin: 3px 0;
-    }
+.biome-name {
+    font-weight: 500;
+    text-transform: capitalize;
 }
 
-@media (max-width: 480px) {
-    .world-info {
-        grid-template-columns: 1fr;
-        padding: 10px;
-    }
-
-    .info-category-content {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .biome-section {
-        padding: 8px;
-    }
-
-    .biome-section .info-item.biome-list ul li {
-        font-size: 0.65rem;
-        padding: 4px 6px;
-    }
+.biome-percentage {
+    font-weight: 600;
+    color: #76c7c0;
 }
 
-/* Map wrapper - FIXED: Allow full map display */
-.map-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: auto; /* Change from hidden to auto to allow scrolling if needed */
-    cursor: grab;
-    transition: all 0.3s ease;
-    width: 100%;
-    /* Remove the height constraint that was cutting off the map */
-    min-height: calc(100vh - 200px); /* Use min-height instead of height */
-    position: relative;
-    padding: 20px 0; /* Add some padding for breathing room */
+/* Trade Routes styling */
+.trade-overview {
+    margin-bottom: 20px;
 }
 
-.map-wrapper:active {
-    cursor: grabbing;
-}
-
-.hex-grid {
-    display: block;
-    margin: 20px auto;
-    width: 90%;
-    max-width: 1200px;
-    height: auto;
-    background-color: rgba(42, 42, 59, 0.8);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
+.trade-routes-list h4 {
+    margin: 0 0 15px 0;
+    color: #76c7c0;
+    font-size: 1.1rem;
     text-align: center;
-    /* Ensure the SVG can take its natural size */
-    overflow: visible;
+    border-bottom: 1px solid rgba(118, 199, 192, 0.2);
+    padding-bottom: 8px;
 }
 
-.hex-grid svg {
-    display: block;
-    margin: 0 auto;
-    width: 100%; /* Let SVG use full width of container */
-    height: auto; /* Maintain aspect ratio */
-    max-width: none; /* Remove width constraint */
+.trade-route-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
 }
 
-/* Tooltip styling - keep on left but don't affect map centering */
+.trade-route-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 215, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+/* NEW: Toggle Button Styling */
+.toggle-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #f0f0f0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.toggle-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(118, 199, 192, 0.5);
+    transform: translateY(-1px);
+}
+
+.toggle-button.active {
+    background: linear-gradient(135deg, #76c7c0 0%, #5ba8a0 100%);
+    border-color: #76c7c0;
+    color: #1e1e2f;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(118, 199, 192, 0.4);
+}
+
+.toggle-button.active:hover {
+    background: linear-gradient(135deg, #5ba8a0 0%, #76c7c0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(118, 199, 192, 0.5);
+}
+
+.toggle-icon {
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.toggle-button.active .toggle-icon {
+    transform: scale(1.1);
+}
+
+/* Update control item styling for toggle buttons */
+.control-item.toggle-item {
+    margin-bottom: 0;
+}
+
+.control-item.toggle-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Remove old checkbox styling since we're replacing with toggle buttons */
+.checkbox-container {
+    display: none; /* Hide old checkboxes */
+}
+
+/* Tooltip styling */
 .tooltip-container {
     position: fixed;
     left: 20px;
@@ -621,23 +524,84 @@ body {
     font-family: 'Roboto', Arial, sans-serif;
 }
 
+/* Scrollbar styling for tab content */
+.tab-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+    background: rgba(30, 30, 47, 0.5);
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: rgba(118, 199, 192, 0.5);
+    border-radius: 4px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(118, 199, 192, 0.7);
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
+    .tab-navigation {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .control-section,
+    .info-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .biomes-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
     .tooltip-container {
         left: 10px;
         max-width: 250px;
         width: 240px;
     }
-    
-    .map-wrapper {
-        width: 100%;
-        min-height: calc(100vh - 180px);
-        padding: 15px 0;
-    }
 }
 
 @media (max-width: 768px) {
-    /* On mobile, move tooltip back to bottom */
+    .header-top h1 {
+        font-size: 1.4rem;
+    }
+    
+    .tab-buttons {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .tab-button {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+    }
+    
+    /* UPDATED: Better mobile styling for toggle buttons */
+    .toggle-button {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        gap: 6px;
+    }
+    
+    .toggle-icon {
+        font-size: 0.9rem;
+    }
+    
+    .route-settlements {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .route-arrow {
+        transform: rotate(90deg);
+    }
+    
     .tooltip-container {
         position: fixed;
         bottom: 20px;
@@ -649,193 +613,85 @@ body {
     }
     
     .map-wrapper {
-        width: 100%;
-        min-height: calc(100vh - 150px);
-        padding: 10px 0;
-    }
-    
-    .tooltip {
-        font-size: 0.75rem;
-        padding: 12px 16px;
+        min-height: calc(100vh - 100px);
     }
 }
 
 @media (max-width: 480px) {
-    .tooltip {
-        font-size: 0.7rem;
-        padding: 10px 12px;
+    .header-top {
+        padding: 5px 10px;
     }
     
-    .map-wrapper {
-        min-height: calc(100vh - 120px);
-        padding: 10px 0;
+    .header-top h1 {
+        font-size: 1.2rem;
+    }
+    
+    .tab-navigation {
+        padding: 10px;
+    }
+    
+    .tab-panel {
+        padding: 15px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* UPDATED: Even more compact toggle buttons on very small screens */
+    .toggle-button {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+        gap: 4px;
+    }
+    
+    .toggle-icon {
+        font-size: 0.8rem;
     }
 }
 
-/* Default styling for hex tiles */
+/* Hex tile styles remain the same */
 .hex-tile {
     stroke: black;
 }
 
-/* Deep ocean and ocean biomes */
-.hex-tile.abyss {
-    fill: #000033; /* Very dark blue */
-}
-
-.hex-tile.deep-ocean {
-    fill: #000066; /* Dark blue */
-}
-
-.hex-tile.deep-cold-ocean {
-    fill: #003366; /* Cold dark blue */
-}
-
-.hex-tile.deep-warm-ocean {
-    fill: #336699; /* Warm dark blue */
-}
-
-.hex-tile.ocean {
-    fill: #000099; /* Medium blue */
-}
-
-.hex-tile.cold-ocean {
-    fill: #003399; /* Cold medium blue */
-}
-
-.hex-tile.warm-ocean {
-    fill: #3399cc; /* Warm medium blue */
-}
-
-.hex-tile.coral-reef {
-    fill: #40e0d0; /* Turquoise color */
-}
-
-/* Hot and dry biomes */
-.hex-tile.desert {
-    fill: #f4a460; /* Sandy brown */
-}
-
-.hex-tile.lush-desert {
-    fill: #f5deb3; /* Wheat color */
-}
-
-.hex-tile.arid-desert {
-    fill: #d2b48c; /* Tan */
-}
-
-.hex-tile.dunes {
-    fill: #edc9af; /* Light sand color */
-}
-
-.hex-tile.mesa {
-    fill: #d2691e; /* Chocolate brown */
-}
-
-.hex-tile.badlands {
-    fill: #a0522d; /* Saddle brown */
-}
-
-/* Grasslands and plains */
-.hex-tile.plain {
-    fill: #7cfc00; /* Lawn green */
-}
-
-.hex-tile.savanna {
-    fill: #c2b280; /* Tan */
-}
-
-.hex-tile.steppe {
-    fill: #deb887; /* Burlywood */
-}
-
-.hex-tile.prairie {
-    fill: #98fb98; /* Pale green */
-}
-
-/* Wet and tropical biomes */
-.hex-tile.rainforest {
-    fill: #228b22; /* Forest green */
-}
-
-.hex-tile.jungle {
-    fill: #006400; /* Dark green */
-}
-
-.hex-tile.mangrove {
-    fill: #556b2f; /* Dark olive green */
-}
-
-.hex-tile.swamp {
-    fill: #6b8e23; /* Olive drab */
-}
-
-.hex-tile.wetland {
-    fill: #8fbc8f; /* Dark sea green */
-}
-
-.hex-tile.marsh {
-    fill: #2e8b57; /* Sea green */
-}
-
-.hex-tile.bog {
-    fill: #3cb371; /* Medium sea green */
-}
-
-/* Forests */
-.hex-tile.forest {
-    fill: #228b22; /* Forest green */
-}
-
-.hex-tile.redwood-forest {
-    fill: #8b4513; /* Saddle brown */
-}
-
-.hex-tile.savanna-forest {
-    fill: #c2b280; /* Tan with a hint of green */
-}
-
-.hex-tile.temperate-forest {
-    fill: #32cd32; /* Lime green */
-}
-
-.hex-tile.boreal-forest {
-    fill: #2e8b57; /* Sea green */
-}
-
-.hex-tile.deciduous-forest {
-    fill: #3cb371; /* Medium sea green */
-}
-
-/* Cold and dry biomes */
-.hex-tile.taiga {
-    fill: #a9a9a9; /* Dark gray */
-}
-
-.hex-tile.tundra {
-    fill: #dcdcdc; /* Gainsboro */
-}
-
-.hex-tile.glacier {
-    fill: #e0ffff; /* Light cyan */
-}
-
-.hex-tile.iceberg {
-    fill: #b0e0e6; /* Powder blue */
-}
-
-.hex-tile.permafrost {
-    fill: #add8e6; /* Light blue */
-}
-
-/* Mountainous biomes */
-.hex-tile.mountain {
-    fill: #808080; /* Gray */
-}
-
-.hex-tile.alpine {
-    fill: #a9a9a9; /* Dark gray */
-}
-
-.hex-tile.rocky-mountain {
-    fill: #696969; /* Dim gray */
-}
+/* All the existing hex-tile biome styles can remain unchanged */
+.hex-tile.abyss { fill: #000033; }
+.hex-tile.deep-ocean { fill: #000066; }
+.hex-tile.deep-cold-ocean { fill: #003366; }
+.hex-tile.deep-warm-ocean { fill: #336699; }
+.hex-tile.ocean { fill: #000099; }
+.hex-tile.cold-ocean { fill: #003399; }
+.hex-tile.warm-ocean { fill: #3399cc; }
+.hex-tile.coral-reef { fill: #40e0d0; }
+.hex-tile.desert { fill: #f4a460; }
+.hex-tile.lush-desert { fill: #f5deb3; }
+.hex-tile.arid-desert { fill: #d2b48c; }
+.hex-tile.dunes { fill: #edc9af; }
+.hex-tile.mesa { fill: #d2691e; }
+.hex-tile.badlands { fill: #a0522d; }
+.hex-tile.plain { fill: #7cfc00; }
+.hex-tile.savanna { fill: #c2b280; }
+.hex-tile.steppe { fill: #deb887; }
+.hex-tile.prairie { fill: #98fb98; }
+.hex-tile.rainforest { fill: #228b22; }
+.hex-tile.jungle { fill: #006400; }
+.hex-tile.mangrove { fill: #556b2f; }
+.hex-tile.swamp { fill: #6b8e23; }
+.hex-tile.wetland { fill: #8fbc8f; }
+.hex-tile.marsh { fill: #2e8b57; }
+.hex-tile.bog { fill: #3cb371; }
+.hex-tile.forest { fill: #228b22; }
+.hex-tile.redwood-forest { fill: #8b4513; }
+.hex-tile.savanna-forest { fill: #c2b280; }
+.hex-tile.temperate-forest { fill: #32cd32; }
+.hex-tile.boreal-forest { fill: #2e8b57; }
+.hex-tile.deciduous-forest { fill: #3cb371; }
+.hex-tile.taiga { fill: #a9a9a9; }
+.hex-tile.tundra { fill: #dcdcdc; }
+.hex-tile.glacier { fill: #e0ffff; }
+.hex-tile.iceberg { fill: #b0e0e6; }
+.hex-tile.permafrost { fill: #add8e6; }
+.hex-tile.mountain { fill: #808080; }
+.hex-tile.alpine { fill: #a9a9a9; }
+.hex-tile.rocky-mountain { fill: #696969; }

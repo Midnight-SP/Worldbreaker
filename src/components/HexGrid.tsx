@@ -1,6 +1,7 @@
 import React from 'react';
 import { Map, Tile } from '../utils/mapGenerator/types';
 import { getRegionColor } from '../utils/mapGenerator/geographicRegions';
+import { oceanBiomes } from '../utils/mapGenerator/biomes';
 
 interface HexGridProps {
     map: Map;
@@ -220,14 +221,28 @@ const HexGrid: React.FC<HexGridProps> = ({
                 };
                 return climateColors[tile.climateZone] || '#808080';
             case 'trade-routes':
-                // For trade routes visualization, use a muted background
+                // UPDATED: Show terrain-based travel types with distinct colors
                 const isSettlement = tile.features.some(f => ['village', 'town', 'city'].includes(f));
                 if (isSettlement) {
                     if (tile.features.includes('city')) return '#FFD700'; // Gold for cities
                     if (tile.features.includes('town')) return '#C0C0C0'; // Silver for towns
                     if (tile.features.includes('village')) return '#CD7F32'; // Bronze for villages
                 }
-                return '#F5F5F5'; // Light gray background
+
+                // Determine terrain type for travel visualization
+                const isWater = tile.altitude <= 0 || oceanBiomes.some(biome => biome.name === tile.terrain);
+                const isRiver = tile.features.includes('river') || tile.features.includes('lake') || tile.features.includes('source');
+                const isMountain = tile.altitude > 0.5 || ['mountain', 'alpine', 'rocky-mountain'].includes(tile.terrain);
+
+                if (isRiver) {
+                    return '#90EE90'; // Light green for rivers/lakes
+                } else if (isWater) {
+                    return '#ADD8E6'; // Light blue for sea/ocean
+                } else if (isMountain) {
+                    return '#DEB887'; // Light brown for mountains
+                } else {
+                    return '#FFE4B5'; // Light orange for land
+                }
             case 'biomes':
             default:
                 return '';
