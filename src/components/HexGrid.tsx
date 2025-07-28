@@ -9,6 +9,7 @@ interface HexGridProps {
     setTooltip: React.Dispatch<React.SetStateAction<string | null>>;
     showNaturalFeatures: boolean;
     showManmadeFeatures: boolean;
+    showTradeRoutes: boolean; // NEW: Add trade routes toggle
 }
 
 const HexGrid: React.FC<HexGridProps> = ({ 
@@ -17,7 +18,8 @@ const HexGrid: React.FC<HexGridProps> = ({
     plates, 
     setTooltip, 
     showNaturalFeatures, 
-    showManmadeFeatures 
+    showManmadeFeatures,
+    showTradeRoutes // NEW: Accept the toggle
 }) => {
     const hexWidth = 20;
     const hexHeight = 20;
@@ -95,6 +97,90 @@ const HexGrid: React.FC<HexGridProps> = ({
         return [x, y];
     };
 
+    // Helper function to get trade route color based on route type
+    const getTradeRouteColor = (routeType: string): string => {
+        switch (routeType) {
+            case 'sea':
+                return '#0066CC'; // Blue for sea routes
+            case 'river':
+                return '#00AA44'; // Green for river routes
+            case 'mountain':
+                return '#AA4400'; // Brown for mountain routes
+            case 'land':
+            default:
+                return '#CC6600'; // Orange for land routes
+        }
+    };
+
+    // Helper function to get stroke width based on trade value
+    const getTradeRouteWidth = (tradeValue: number): number => {
+        if (tradeValue >= 200) return 3;
+        if (tradeValue >= 100) return 2;
+        if (tradeValue >= 50) return 1.5;
+        return 1;
+    };
+
+    // Helper function to render trade routes - UPDATED
+    const renderTradeRoutes = () => {
+        // Show trade routes if:
+        // 1. We're in trade-routes visualization mode, OR
+        // 2. The showTradeRoutes toggle is enabled
+        if (visualizationType !== 'trade-routes' && !showTradeRoutes) return null;
+
+        const routes: JSX.Element[] = [];
+        const processedRoutes = new Set<string>();
+
+        map.forEach((row, rowIndex) => {
+            row.forEach((tile, colIndex) => {
+                if (tile.tradeRoutes && tile.tradeRoutes.length > 0) {
+                    tile.tradeRoutes.forEach((route, routeIndex) => {
+                        // Create a unique key for this route to avoid duplicates
+                        const routeKey = `${Math.min(route.from.row, route.to.row)}-${Math.min(route.from.col, route.to.col)}-${Math.max(route.from.row, route.to.row)}-${Math.max(route.from.col, route.to.col)}`;
+                        
+                        if (!processedRoutes.has(routeKey)) {
+                            processedRoutes.add(routeKey);
+                            
+                            const [fromX, fromY] = getHexCenter(route.from.row, route.from.col);
+                            const [toX, toY] = getHexCenter(route.to.row, route.to.col);
+                            
+                            const routeDescription = `🚛 Trade Route
+📍 From: (${route.from.col}, ${route.from.row}) to (${route.to.col}, ${route.to.row})
+🛤️ Type: ${route.routeType.charAt(0).toUpperCase() + route.routeType.slice(1)}
+📏 Distance: ${route.distance.toFixed(1)}
+⏱️ Travel Time: ${route.travelTime.toFixed(1)}
+💰 Trade Value: ${route.tradeValue}
+🛣️ Path Length: ${route.path.length} tiles`;
+
+                            // UPDATED: Adjust opacity based on visualization mode
+                            const routeOpacity = visualizationType === 'trade-routes' ? 0.7 : 0.5;
+                            const routeWidth = visualizationType === 'trade-routes' ? 
+                                getTradeRouteWidth(route.tradeValue) : 
+                                Math.max(1, getTradeRouteWidth(route.tradeValue) * 0.8); // Slightly thinner in overlay mode
+
+                            routes.push(
+                                <line
+                                    key={`route-${rowIndex}-${colIndex}-${routeIndex}`}
+                                    x1={fromX}
+                                    y1={fromY}
+                                    x2={toX}
+                                    y2={toY}
+                                    stroke={getTradeRouteColor(route.routeType)}
+                                    strokeWidth={2*routeWidth}
+                                    strokeOpacity={2*routeOpacity}
+                                    strokeDasharray={route.routeType === 'sea' ? '5,5' : route.routeType === 'river' ? '3,3' : 'none'}
+                                    onMouseEnter={() => setTooltip(routeDescription)}
+                                    onMouseLeave={() => setTooltip(null)}
+                                />
+                            );
+                        }
+                    });
+                }
+            });
+        });
+
+        return routes;
+    };
+
     const getFillColor = (tile: Tile, row?: number, col?: number): string => {
         switch (visualizationType) {
             case 'altitude':
@@ -133,6 +219,15 @@ const HexGrid: React.FC<HexGridProps> = ({
                     unknown: '#808080',
                 };
                 return climateColors[tile.climateZone] || '#808080';
+            case 'trade-routes':
+                // For trade routes visualization, use a muted background
+                const isSettlement = tile.features.some(f => ['village', 'town', 'city'].includes(f));
+                if (isSettlement) {
+                    if (tile.features.includes('city')) return '#FFD700'; // Gold for cities
+                    if (tile.features.includes('town')) return '#C0C0C0'; // Silver for towns
+                    if (tile.features.includes('village')) return '#CD7F32'; // Bronze for villages
+                }
+                return '#F5F5F5'; // Light gray background
             case 'biomes':
             default:
                 return '';
@@ -144,6 +239,7 @@ const HexGrid: React.FC<HexGridProps> = ({
             <svg
                 viewBox={`-${hexWidth / 2} -${hexHeight / 2} ${map[0].length * hexWidth * 0.75 + hexWidth} ${map.length * hexHeight + hexHeight}`}
             >
+                {/* Render hexagon tiles */}
                 {map.map((row: Tile[], rowIndex: number) =>
                     row.map((tile: Tile, colIndex: number) => {
                         const [x, y] = getHexCenter(rowIndex, colIndex);
@@ -167,7 +263,10 @@ const HexGrid: React.FC<HexGridProps> = ({
                         // Get plate name
                         const plateName = tile.plateName || `Plate ${tile.plate}`;
 
-                        // Build the tooltip description with names
+                        // Build the tooltip description with names - UPDATED to show trade route info when enabled
+                        const tradeRouteInfo = (showTradeRoutes || visualizationType === 'trade-routes') && tile.tradeRoutes && tile.tradeRoutes.length > 0 ? 
+                            `\n\n💰 Trade Routes: ${tile.tradeRoutes.length}\n• Total Value: ${tile.tradeRoutes.reduce((sum, route) => sum + route.tradeValue, 0)}` : '';
+
                         const tileDescription = `📍 Coordinates: (${colIndex}, ${rowIndex})
 🏔️ Plate: ${plateName}
 🌍 Region: ${regionInfo}
@@ -178,7 +277,7 @@ const HexGrid: React.FC<HexGridProps> = ({
 🏠 Habitability: ${tile.habitability.toFixed(2)}
 🌐 Latitude: ${tile.latitude.toFixed(2)}
 🌱 Biome: ${tile.terrain.replace(/-/g, ' ')}
-🌤️ Climate: ${tile.climateZone}${featureNames.length > 0 ? `\n\n🏞️ Features:\n${featureNames.map(name => `• ${name}`).join('\n')}` : ''}`;
+🌤️ Climate: ${tile.climateZone}${featureNames.length > 0 ? `\n\n🏞️ Features:\n${featureNames.map(name => `• ${name}`).join('\n')}` : ''}${tile.travelBonuses ? `\n\n🚛 Travel Bonuses:\n• Land: ${tile.travelBonuses.landTravel.toFixed(2)}\n• Sea: ${tile.travelBonuses.seaTravel.toFixed(2)}\n• River: ${tile.travelBonuses.riverTravel.toFixed(2)}\n• Mountain: ${tile.travelBonuses.mountainTravel.toFixed(2)}` : ''}${tradeRouteInfo}`;
 
                         return (
                             <g key={`${rowIndex}-${colIndex}`}>
@@ -194,56 +293,14 @@ const HexGrid: React.FC<HexGridProps> = ({
                                     `}
                                     className={`hex-tile ${visualizationType === 'biomes' ? tile.terrain : ''}`}
                                     fill={visualizationType !== 'biomes' ? getFillColor(tile, rowIndex, colIndex) : undefined}
+                                    stroke={visualizationType === 'trade-routes' ? '#CCCCCC' : undefined}
+                                    strokeWidth={visualizationType === 'trade-routes' ? 0.5 : undefined}
                                     onMouseEnter={() => setTooltip(tileDescription)}
                                     onMouseLeave={() => setTooltip(null)}
                                 />
 
-                                {/* Feature Icons */}
-                                {shouldShowFeature('source') && tile.features.includes('source') && (
-                                    <image
-                                        href="/icons/source-icon.svg"
-                                        x={x - hexWidth / 4}
-                                        y={y - hexHeight / 4}
-                                        width={hexWidth / 2}
-                                        height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)}
-                                        onMouseLeave={() => setTooltip(null)}
-                                    />
-                                )}
-                                {shouldShowFeature('river') && tile.features.includes('river') && (
-                                    <image
-                                        href="/icons/river-icon.svg"
-                                        x={x - hexWidth / 4}
-                                        y={y - hexHeight / 4}
-                                        width={hexWidth / 2}
-                                        height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)}
-                                        onMouseLeave={() => setTooltip(null)}
-                                    />
-                                )}
-                                {shouldShowFeature('lake') && tile.features.includes('lake') && (
-                                    <image
-                                        href="/icons/lake-icon.svg"
-                                        x={x - hexWidth / 4}
-                                        y={y - hexHeight / 4}
-                                        width={hexWidth / 2}
-                                        height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)}
-                                        onMouseLeave={() => setTooltip(null)}
-                                    />
-                                )}
-                                {shouldShowFeature('volcano') && tile.features.includes('volcano') && (
-                                    <image
-                                        href="/icons/volcano-icon.svg"
-                                        x={x - hexWidth / 4}
-                                        y={y - hexHeight / 4}
-                                        width={hexWidth / 2}
-                                        height={hexHeight / 2}
-                                        onMouseEnter={() => setTooltip(tileDescription)}
-                                        onMouseLeave={() => setTooltip(null)}
-                                    />
-                                )}
-                                {shouldShowFeature('village') && tile.features.includes('village') && (
+                                {/* Feature Icons - Show settlements always in trade routes mode or when trade routes are enabled */}
+                                {(visualizationType === 'trade-routes' || showTradeRoutes || shouldShowFeature('village')) && tile.features.includes('village') && (
                                     <image
                                         href="/icons/village-icon.svg"
                                         x={x - hexWidth / 4}
@@ -254,7 +311,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {shouldShowFeature('town') && tile.features.includes('town') && (
+                                {(visualizationType === 'trade-routes' || showTradeRoutes || shouldShowFeature('town')) && tile.features.includes('town') && (
                                     <image
                                         href="/icons/town-icon.svg"
                                         x={x - hexWidth / 4}
@@ -265,7 +322,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
-                                {shouldShowFeature('city') && tile.features.includes('city') && (
+                                {(visualizationType === 'trade-routes' || showTradeRoutes || shouldShowFeature('city')) && tile.features.includes('city') && (
                                     <image
                                         href="/icons/city-icon.svg"
                                         x={x - hexWidth / 4}
@@ -276,10 +333,63 @@ const HexGrid: React.FC<HexGridProps> = ({
                                         onMouseLeave={() => setTooltip(null)}
                                     />
                                 )}
+
+                                {/* Other feature icons (only show if not in trade routes mode or if enabled) */}
+                                {visualizationType !== 'trade-routes' && (
+                                    <>
+                                        {shouldShowFeature('source') && tile.features.includes('source') && (
+                                            <image
+                                                href="/icons/source-icon.svg"
+                                                x={x - hexWidth / 4}
+                                                y={y - hexHeight / 4}
+                                                width={hexWidth / 2}
+                                                height={hexHeight / 2}
+                                                onMouseEnter={() => setTooltip(tileDescription)}
+                                                onMouseLeave={() => setTooltip(null)}
+                                            />
+                                        )}
+                                        {shouldShowFeature('river') && tile.features.includes('river') && (
+                                            <image
+                                                href="/icons/river-icon.svg"
+                                                x={x - hexWidth / 4}
+                                                y={y - hexHeight / 4}
+                                                width={hexWidth / 2}
+                                                height={hexHeight / 2}
+                                                onMouseEnter={() => setTooltip(tileDescription)}
+                                                onMouseLeave={() => setTooltip(null)}
+                                            />
+                                        )}
+                                        {shouldShowFeature('lake') && tile.features.includes('lake') && (
+                                            <image
+                                                href="/icons/lake-icon.svg"
+                                                x={x - hexWidth / 4}
+                                                y={y - hexHeight / 4}
+                                                width={hexWidth / 2}
+                                                height={hexHeight / 2}
+                                                onMouseEnter={() => setTooltip(tileDescription)}
+                                                onMouseLeave={() => setTooltip(null)}
+                                            />
+                                        )}
+                                        {shouldShowFeature('volcano') && tile.features.includes('volcano') && (
+                                            <image
+                                                href="/icons/volcano-icon.svg"
+                                                x={x - hexWidth / 4}
+                                                y={y - hexHeight / 4}
+                                                width={hexWidth / 2}
+                                                height={hexHeight / 2}
+                                                onMouseEnter={() => setTooltip(tileDescription)}
+                                                onMouseLeave={() => setTooltip(null)}
+                                            />
+                                        )}
+                                    </>
+                                )}
                             </g>
                         );
                     })
                 )}
+
+                {/* Render trade routes */}
+                {renderTradeRoutes()}
             </svg>
         </div>
     );

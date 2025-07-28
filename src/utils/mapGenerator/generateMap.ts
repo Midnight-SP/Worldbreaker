@@ -12,6 +12,7 @@ import seedrandom from 'seedrandom';
 import { Map } from './types';
 import { identifyGeographicRegions } from './geographicRegions';
 import { NameGenerator } from './nameGenerator';
+import { generateTradeRoutes } from './tradeRoutes';
 
 
 export async function generateMap(
@@ -383,6 +384,11 @@ export async function generateMap(
     console.log('Identifying geographic regions...');
     identifyGeographicRegions(map, masterSeed);
     console.log('Geographic regions identified.');
+
+    // NEW: Generate trade routes
+    console.log('Generating trade routes...');
+    generateTradeRoutes(map);
+    console.log('Trade routes generated.');
 
     return { 
         map, 

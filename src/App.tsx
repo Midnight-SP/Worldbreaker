@@ -20,6 +20,7 @@ const App: React.FC = () => {
     // Split show features into two separate toggles
     const [showNaturalFeatures, setShowNaturalFeatures] = useState<boolean>(true);
     const [showManmadeFeatures, setShowManmadeFeatures] = useState<boolean>(true);
+    const [showTradeRoutes, setShowTradeRoutes] = useState<boolean>(false); // NEW: Trade routes toggle
     
     const [latitudeMode, setLatitudeMode] = useState<'full' | 'partial'>('full');
     const [copyNotification, setCopyNotification] = useState<boolean>(false);
@@ -126,6 +127,20 @@ const App: React.FC = () => {
     const toggleWorldInfo = () => {
         setShowWorldInfo(!showWorldInfo);
     };
+
+    // Visualization options
+    const visualizationOptions = [
+        { value: 'biomes', label: 'Biomes' },
+        { value: 'altitude', label: 'Altitude' },
+        { value: 'temperature', label: 'Temperature' },
+        { value: 'humidity', label: 'Humidity' },
+        { value: 'vegetation', label: 'Vegetation' },
+        { value: 'habitability', label: 'Habitability' },
+        { value: 'plates', label: 'Tectonic Plates' },
+        { value: 'geographic-regions', label: 'Geographic Regions' },
+        { value: 'climate', label: 'Climate Zones' },
+        { value: 'trade-routes', label: 'Trade Routes' },
+    ];
 
     return (
         <div className="App">
@@ -257,15 +272,11 @@ const App: React.FC = () => {
                                     value={visualizationType}
                                     onChange={(e) => setVisualizationType(e.target.value)}
                                 >
-                                    <option value="biomes">Biomes</option>
-                                    <option value="climate">Climate Zones</option>
-                                    <option value="altitude">Altitude</option>
-                                    <option value="temperature">Temperature</option>
-                                    <option value="humidity">Humidity</option>
-                                    <option value="vegetation">Vegetation</option>
-                                    <option value="habitability">Habitability</option>
-                                    <option value="plates">Tectonic Plates</option>
-                                    <option value="geographic-regions">Geographic Regions</option>
+                                    {visualizationOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             
@@ -290,6 +301,19 @@ const App: React.FC = () => {
                                         onChange={(e) => setShowManmadeFeatures(e.target.checked)}
                                     />
                                     <label htmlFor="show-manmade-features">Show Manmade Features</label>
+                                </div>
+                            </div>
+
+                            {/* NEW: Trade Routes Toggle */}
+                            <div className="control-item">
+                                <div className="checkbox-container">
+                                    <input
+                                        type="checkbox"
+                                        id="show-trade-routes"
+                                        checked={showTradeRoutes}
+                                        onChange={(e) => setShowTradeRoutes(e.target.checked)}
+                                    />
+                                    <label htmlFor="show-trade-routes">Show Trade Routes</label>
                                 </div>
                             </div>
                         </div>
@@ -446,6 +470,7 @@ const App: React.FC = () => {
                         setTooltip={setTooltip}
                         showNaturalFeatures={showNaturalFeatures}
                         showManmadeFeatures={showManmadeFeatures}
+                        showTradeRoutes={showTradeRoutes} // NEW: Pass the toggle state
                     />
                 )}
             </div>
